@@ -16,30 +16,30 @@ if (ds$design == "tissue") {
   # Secondary conditions (e.g. caries): one-line check only, no disease analysis
   if (ds$primary_condition %in% obj$condition && length(unique(obj$condition)) > 1) {
     other <- subset(obj, condition != ds$primary_condition)
-    chk <- wls_summary(other, gene, "A_perivascular_subclusters")
+    chk <- wls_summary(other, gene, "A_stem_subclusters")
     write.csv(chk, file.path(out, "secondary_conditions_check.csv"), row.names = FALSE)
     obj <- subset(obj, condition == ds$primary_condition)
   } else if (!ds$primary_condition %in% obj$condition) {
     warning("primary_condition '", ds$primary_condition, "' not in sample sheet; using all samples")
   }
 
-  obj$group <- ifelse(obj$A_perivascular_subclusters, "Candidate_DPSC", obj$cell_type)
+  obj$group <- ifelse(obj$A_stem_subclusters, "Candidate_DPSC", obj$cell_type)
   write.csv(wls_summary(obj, gene, "group"), file.path(out, "WLS_by_cell_type.csv"), row.names = FALSE)
 
   is_mes <- obj$cell_type %in% MESENCHYME
   tests <- list()
-  for (d in c("A_perivascular_subclusters", "B_top20pct_stem_score",
+  for (d in c("A_stem_subclusters", "B_top20pct_stem_score",
               "C_3plus_stem_markers", "D_MCAM_positive")) {
     dp <- obj[[d]][, 1]
     tests[[paste(d, "all")]] <- cbind(definition = d, wls_test(obj, gene, dp, !dp, "DPSC vs all other cells"))
     tests[[paste(d, "mes")]] <- cbind(definition = d, wls_test(obj, gene, dp, is_mes & !dp, "DPSC vs other mesenchyme"))
   }
   # Primary definition A vs each other cell type
-  dpA <- obj$A_perivascular_subclusters
-  for (ct in setdiff(unique(obj$cell_type), "Perivascular")) {
+  dpA <- obj$A_stem_subclusters
+  for (ct in unique(obj$cell_type)) {
     ref <- obj$cell_type == ct & !dpA
     if (sum(ref) >= 20)
-      tests[[ct]] <- cbind(definition = "A_perivascular_subclusters",
+      tests[[ct]] <- cbind(definition = "A_stem_subclusters",
                            wls_test(obj, gene, dpA, ref, paste("DPSC vs", ct)))
   }
   plot_group <- "group"

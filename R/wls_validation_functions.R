@@ -17,8 +17,9 @@ PERIVASCULAR <- c("MCAM", "PDGFRB", "RGS5", "KCNJ8", "NOTCH3", "ACTA2")
 FIBROBLAST   <- c("COL1A1", "DCN", "LUM", "PDGFRA")
 
 CELLTYPE_PANELS <- list(
-  Pulp_fibroblast = FIBROBLAST,
-  Perivascular    = PERIVASCULAR,
+  Pulp_fibroblast   = FIBROBLAST,
+  Perivascular_MCAM = PERIVASCULAR,
+  Odontoblast       = c("DSPP", "DMP1", "PHEX", "MEPE"),
   Endothelial     = c("PECAM1", "CDH5", "VWF", "CLDN5"),
   Schwann_glia    = c("PLP1", "MPZ", "S100B", "SOX10"),
   T_NK            = c("CD3E", "CD3D", "NKG7", "GZMA"),
@@ -27,7 +28,9 @@ CELLTYPE_PANELS <- list(
   Epithelial      = c("KRT14", "KRT5", "EPCAM"),
   Erythrocyte     = c("HBB", "HBA1")
 )
-MESENCHYME <- c("Pulp_fibroblast", "Perivascular")
+# Same mesenchymal labels as 06_annotation.R (MSC_progenitor can be assigned
+# by hand in data/annotation/<acc>_cluster_labels.csv)
+MESENCHYME <- c("Pulp_fibroblast", "MSC_progenitor", "Perivascular_MCAM", "Odontoblast")
 EXCLUDED   <- c("Epithelial", "Erythrocyte")
 
 # ---- Config and sample sheets -----------------------------------------------
@@ -134,13 +137,22 @@ annotate_clusters <- function(obj, acc, out_dir) {
 }
 
 # ---- DPSC definitions A-D (from 07b_WLS_sensitivity.R) -----------------------
-# A uses the stage-06 rule: mesenchymal sub-clusters with stem score above
-# background (> 0) that are perivascular (perivascular score > 0).
-# Check that these thresholds match 06_annotation.R before running.
+# A uses the stage-06 rule (06_annotation.R, line 145): mesenchymal sub-clusters
+# whose mean stem score is above background (> 0). The perivascular score is
+# reported alongside but is NOT used for the call.
 define_dpsc <- function(obj, cfg) {
+  # Re-processed on its own, exactly as in 06_annotation.R section 5:
+  # new HVGs, PCA, Harmony by sample (dims 1:15), resolution 0.4
   mes <- subset(obj, cell_type %in% MESENCHYME)
-  mes <- FindNeighbors(mes, reduction = if ("harmony" %in% Reductions(mes)) "harmony" else "pca",
-                       dims = 1:cfg$clustering$n_pcs, verbose = FALSE)
+  mes <- FindVariableFeatures(mes, nfeatures = 2000, verbose = FALSE)
+  mes <- ScaleData(mes, verbose = FALSE)
+  mes <- RunPCA(mes, npcs = 30, verbose = FALSE)
+  red <- "pca"
+  if (length(unique(mes$sample)) > 1) {
+    mes <- harmony::RunHarmony(mes, group.by.vars = "sample", dims.use = 1:15, verbose = FALSE)
+    red <- "harmony"
+  }
+  mes <- FindNeighbors(mes, reduction = red, dims = 1:15, verbose = FALSE)
   mes <- FindClusters(mes, resolution = cfg$clustering$mes_resolution,
                       cluster.name = "mes_subcluster", verbose = FALSE)
   stem <- intersect(STEM_CORE, rownames(mes)); peri <- intersect(PERIVASCULAR, rownames(mes))
@@ -149,12 +161,12 @@ define_dpsc <- function(obj, cfg) {
   mes$stemcell <- mes$stemcell1; mes$perivasc <- mes$perivasc1
 
   sub_means <- aggregate(cbind(stemcell, perivasc) ~ mes_subcluster, mes@meta.data, mean)
-  dpsc_subs <- sub_means$mes_subcluster[sub_means$stemcell > 0 & sub_means$perivasc > 0]
+  dpsc_subs <- sub_means$mes_subcluster[sub_means$stemcell > 0]
 
   X <- FetchData(mes, c(stem, "MCAM"))
   n_markers <- rowSums(X[, stem, drop = FALSE] > 0)
   defs <- data.frame(
-    A_perivascular_subclusters = mes$mes_subcluster %in% dpsc_subs,
+    A_stem_subclusters = mes$mes_subcluster %in% dpsc_subs,
     B_top20pct_stem_score      = mes$stemcell >= quantile(mes$stemcell, 0.80),
     C_3plus_stem_markers       = n_markers >= 3,
     D_MCAM_positive            = X$MCAM > 0,

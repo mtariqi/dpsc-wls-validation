@@ -17,7 +17,7 @@ for (acc in names(cfg$datasets)) {
   if (!file.exists(f)) { message("Not run yet: ", acc); next }
   t <- read.csv(f)
   main <- t[t$comparison %in% c("DPSC vs all other cells", "DPSC vs PDLSC") &
-            t$definition %in% c("A_perivascular_subclusters", "sample label"), ]
+            t$definition %in% c("A_stem_subclusters", "sample label"), ]
   rows[[acc]] <- data.frame(dataset = acc, design = cfg$datasets[[acc]]$design,
     comparison = main$comparison, n_DPSC = main$n_DPSC,
     pct_WLS_DPSC = round(main$pct_WLS_DPSC, 1), pct_WLS_ref = round(main$pct_WLS_ref, 1),

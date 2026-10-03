@@ -13,7 +13,7 @@ qc:
 clustering:
   n_pcs: 20
   resolution: 0.5
-  mes_resolution: 0.5
+  mes_resolution: 0.4      # as in 06_annotation.R
 
 # Reference row from the discovery dataset (README, results/07_WLS)
 reference:
