@@ -9,14 +9,27 @@ This repository tests that single question in independent human scRNA-seq datase
 | Dataset | Tissue | Comparison | Donors | Status |
 |---|---|---|---|---|
 | [GSE164157](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE164157) | Fresh pulp, 5 donors | DPSC vs other pulp cells | 5 | ✅ discovery (other repo) |
-| [GSE185222](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE185222) | Fresh pulp; sound tooth (DTP_01) used | DPSC vs other pulp cells | 1 | ⬜ |
-| [GSE202476](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE202476) | Fresh pulp, 13 y, immature third molar | DPSC vs other pulp cells | 1 | ⬜ |
-| [GSE227731](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE227731) ([PRJNA946721](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA946721)) | DPSCs and PDLSCs | DPSC vs PDLSC | 1 library each | ⬜ |
+| [GSE185222](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE185222) | Fresh pulp; sound tooth (DTP_01) used | DPSC vs other pulp cells | 1 | ✅ |
+| [GSE202476](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE202476) | Fresh pulp, 13 y, immature third molar | DPSC vs other pulp cells | 1 | ✅ |
+| [GSE227731](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE227731) ([PRJNA946721](https://www.ncbi.nlm.nih.gov/bioproject/PRJNA946721)) | DPSCs and PDLSCs | DPSC vs PDLSC | 1 library each | ✅ |
+
+## Result
+
+**WLS is expressed in DPSCs in all 4 datasets but enriched in none.** In pulp tissue, fibroblasts are consistently the main WLS⁺ mesenchymal population.
+
+| Dataset | Comparison | DPSCs | % WLS⁺ DPSC | % WLS⁺ comparison | log2FC | p | Test | Enriched? |
+|---|---|---|---|---|---|---|---|---|
+| GSE164157 | DPSC vs all other cells | 2,847 | 11.1 | – | −0.14 | 0.57 (FDR) | pseudobulk edgeR, 5 donors | No |
+| GSE185222 (sound tooth) | DPSC vs all other cells | 122 | 14.8 | 16.9 | +0.21 | 0.71 | descriptive, 1 donor | No |
+| GSE202476 | DPSC vs all other cells | 1,011 | 33.8 | 36.7 | −0.16 | 0.14 | descriptive, 1 donor | No |
+| GSE227731 | DPSC vs PDLSC | 2,150 | 69.5 | 83.7 | −0.72 | 3.6e-59 | descriptive, 1 library each | No (lower than PDLSC) |
+
+Notes: % WLS⁺ differs between datasets because of sequencing depth, chemistry and culture; compare DPSCs with other cells *within* each dataset. Carious teeth in GSE185222 show the same pattern (DPSCs ≤ other cells in all three). No WLS-high DPSC sub-cluster was found in GSE227731. Full table: [`results/WLS_cross_dataset_summary.csv`](results/WLS_cross_dataset_summary.csv).
 
 ## Methods in brief
 
 - **QC:** `nFeature_RNA > 200`, `nCount_RNA > 500`, `percent.mt < 20`; doublets removed with scDblFinder; Harmony by sample when there is more than one.
-- **DPSCs:** four definitions, as in the discovery repo. A (primary): mesenchymal sub-clusters with mean stem score above background (as in 06_annotation.R). B: top 20% stem score. C: ≥3 stem markers. D: MCAM⁺.
+- **DPSCs:** four definitions, as in the discovery repo. A (primary): mesenchymal sub-clusters (re-clustered, Harmony dims 1:15, resolution 0.4) with mean stem score above background, as in `06_annotation.R`. B: top 20% stem score. C: ≥3 stem markers. D: MCAM⁺.
 - **Statistics:** ≥3 donors: edgeR quasi-likelihood pseudobulk. Fewer donors: % WLS⁺, pooled log2FC and cell-level Wilcoxon, reported as **descriptive**.
 
 ## Run

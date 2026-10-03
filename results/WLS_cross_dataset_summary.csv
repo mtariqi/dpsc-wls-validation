@@ -1,0 +1,5 @@
+"dataset","design","comparison","n_DPSC","pct_WLS_DPSC","pct_WLS_ref","log2FC","p_value","test","WLS_expressed_in_DPSC","WLS_enriched_in_DPSC"
+"GSE164157","tissue","DPSC vs all other cells",2847,11.1,NA,-0.14,0.57,"pseudobulk edgeR (5 donors)","yes","no"
+"GSE185222","tissue","DPSC vs all other cells",122,14.8,16.9,0.21,0.71,"cell-level Wilcoxon, descriptive (1 donor)","yes","no"
+"GSE202476","tissue","DPSC vs all other cells",1011,33.8,36.7,-0.16,0.14,"cell-level Wilcoxon, descriptive (1 donor)","yes","no"
+"GSE227731","stem_cells","DPSC vs PDLSC",2150,69.5,83.7,-0.72,3.6e-59,"cell-level Wilcoxon, descriptive (1 donor)","yes","depleted (1 donor)"
