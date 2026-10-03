@@ -24,7 +24,9 @@ if (isTRUE(ds$combined_matrix)) {
                   recursive = TRUE, full.names = TRUE)[1]
   df <- data.table::fread(f, data.table = FALSE)
   genes <- df[[1]]; df <- df[, -1, drop = FALSE]
-  m_all <- as(as.matrix(df), "dgCMatrix"); rownames(m_all) <- make.unique(genes)
+  m_all <- as(as.matrix(df), "dgCMatrix"); rownames(m_all) <- make.unique(as.character(genes))
+  if (mean(grepl("[ACGT]{10,}", head(genes, 200))) > 0.5) m_all <- t(m_all)   # cells were rows
+  message(nrow(m_all), " genes x ", ncol(m_all), " cells")
   message("Example cell names: ", paste(head(colnames(m_all), 5), collapse = ", "))
   hits <- sapply(ss$cell_regex, function(r) grepl(r, colnames(m_all)))
   if (any(colSums(hits) == 0) || any(rowSums(hits) > 1))

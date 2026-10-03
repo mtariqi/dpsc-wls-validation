@@ -55,6 +55,8 @@ target_symbol <- function(obj, cfg) {
 read_counts_any <- function(dir, id) {
   files <- list.files(dir, recursive = TRUE, full.names = TRUE)
   files <- files[grepl(id, basename(files)) | grepl(id, dirname(files))]
+  files <- files[!grepl("\\.tar$", files)]
+  files <- files[!duplicated(basename(files))]   # series tar + GSM folder can hold the same file
   if (length(files) == 0) stop("No files for ", id, " under ", dir)
 
   mtx <- grep("matrix\\.mtx(\\.gz)?$", files, value = TRUE)
@@ -71,12 +73,21 @@ read_counts_any <- function(dir, id) {
     if (is.list(m)) m <- m[["Gene Expression"]]
   } else if (length(tab) == 1) {
     df <- data.table::fread(tab, data.table = FALSE)
-    genes <- df[[1]]; df <- df[, -1, drop = FALSE]
-    m <- as(as.matrix(df), "dgCMatrix"); rownames(m) <- make.unique(genes)
+    ids <- df[[1]]; df <- df[, -1, drop = FALSE]
+    m <- as(as.matrix(df), "dgCMatrix")
+    # Orientation: genes x cells expected. If row ids look like cell barcodes, transpose.
+    if (mean(grepl("[ACGT]{10,}", head(ids, 200))) > 0.5) {
+      rownames(m) <- make.unique(as.character(ids)); m <- t(m)
+    } else {
+      rownames(m) <- make.unique(as.character(ids))
+    }
   } else {
     stop("Could not identify a single count matrix for ", id,
          ". Files found:\n", paste(basename(files), collapse = "\n"))
   }
+  message(id, ": ", nrow(m), " genes x ", ncol(m), " cells; first genes: ",
+          paste(head(rownames(m), 3), collapse = ", "), "; first cells: ",
+          paste(head(colnames(m), 2), collapse = ", "))
   m
 }
 

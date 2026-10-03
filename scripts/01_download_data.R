@@ -17,7 +17,7 @@ for (acc in c("GSE185222", "GSE202476", "GSE227731")) {
   for (t in list.files(out, "\\.tar$", full.names = TRUE)) untar(t, exdir = out)
 
   # 2. If the series had no matrices, fall back to sample-level files
-  have_counts <- length(list.files(out, "matrix\\.mtx|\\.h5$|count|umi",
+  have_counts <- length(list.files(out, "matrix\\.mtx|\\.h5$|count|umi|\\.csv",
                                    recursive = TRUE, ignore.case = TRUE)) > 0
   if (!have_counts) {
     gse <- getGEO(acc, GSEMatrix = FALSE)
