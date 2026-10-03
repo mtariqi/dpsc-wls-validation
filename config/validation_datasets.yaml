@@ -1,0 +1,47 @@
+# cross-dataset validation of WLS (Gpr177/Wntless) in DPSCs
+# Scope: ONE question - is WLS expressed in, and enriched in, the DPSC population?
+
+target_gene: WLS
+target_aliases: [WLS, GPR177]
+
+# Same filters as GSE164157 (scripts/04_QC.R)
+qc:
+  min_features: 200
+  min_counts: 500
+  max_percent_mt: 20
+
+clustering:
+  n_pcs: 20
+  resolution: 0.5
+  mes_resolution: 0.5
+
+# Reference row from the discovery dataset (README, results/07_WLS)
+reference:
+  dataset: GSE164157
+  design: tissue
+  n_donors: 5
+  pct_WLS_DPSC: 11.1        # median across donors
+  log2FC_vs_all_other: -0.14
+  p_value: 0.57             # FDR, edgeR QL pseudobulk ~ donor + group
+  test: "pseudobulk edgeR (5 donors)"
+
+datasets:
+  GSE185222:
+    source: GEO
+    organism: human
+    design: tissue          # DPSC vs other pulp cells
+    primary_condition: sound
+    sample_sheet: data/metadata/GSE185222_samples.tsv
+  GSE202476:
+    source: GEO
+    organism: human
+    design: tissue
+    primary_condition: youth
+    sample_sheet: data/metadata/GSE202476_samples.tsv
+  GSE227731:               # scRNA-seq part of PRJNA946721 (Yang et al. 2024, J Dent Res)
+    source: GEO
+    organism: human
+    design: stem_cells      # only stem cells present: DPSC vs PDLSC
+    primary_condition: all
+    sample_sheet: data/metadata/GSE227731_samples.tsv
+    combined_matrix: true   # one CSV with both samples; cells split by cell_regex

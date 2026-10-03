@@ -1,0 +1,5 @@
+sample_id	accession	donor	condition	include
+DTP_01	GSM5608427	D_DTP01	sound	yes
+DTP_02	GSM5608428	D_DTP02	deep_caries	yes
+DTP_04	GSM5608429	D_DTP04	enamel_caries	yes
+DTP_05	GSM5608430	D_DTP05	deep_caries	yes
