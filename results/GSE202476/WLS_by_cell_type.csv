@@ -1,0 +1,8 @@
+"sample","group","n_cells","pct_WLS","mean_lognorm"
+"Youth_pulp","Candidate_DPSC",1011,33.8278931750742,0.32071033877151
+"Youth_pulp","Endothelial",1425,24.140350877193,0.20581156670704
+"Youth_pulp","Myeloid",1633,36.8034292712799,0.496906155091512
+"Youth_pulp","Perivascular_MCAM",7,0,0
+"Youth_pulp","Pulp_fibroblast",5525,50.5339366515837,0.446914705179236
+"Youth_pulp","Schwann_glia",108,14.8148148148148,0.19163500919616
+"Youth_pulp","T_NK",1589,1.38451856513531,0.0198998818744225
