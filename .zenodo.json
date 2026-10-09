@@ -1,0 +1,16 @@
+{
+  "title": "dpsc-wls-validation: WLS (Gpr177/Wntless) expression in human dental pulp stem cells across four public scRNA-seq datasets",
+  "upload_type": "software",
+  "description": "<p>R pipeline and result tables testing whether WLS (Gpr177/Wntless) is expressed in, and enriched in, candidate dental pulp stem cells (DPSCs). Datasets: GEO GSE164157 (discovery, 5 donors), GSE202476, GSE185222 and GSE227731 (PRJNA946721). Result: WLS is expressed in DPSCs in all four datasets but enriched in none.</p>",
+  "creators": [
+    {"name": "Islam, Md Tariqul", "affiliation": "The ADA Forsyth Institute"}
+  ],
+  "contributors": [
+    {"name": "Hsu, Wei", "affiliation": "The ADA Forsyth Institute", "type": "Supervisor"}
+  ],
+  "license": "MIT",
+  "keywords": ["WLS", "GPR177", "Wntless", "dental pulp stem cells", "single-cell RNA-seq", "Seurat", "Wnt signaling"],
+  "related_identifiers": [
+    {"identifier": "https://github.com/mtariqi/dpsc-wls-human-scRNAseq", "relation": "isContinuationOf", "resource_type": "software"}
+  ]
+}

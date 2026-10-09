@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this code or these results, please cite it as below."
+title: "dpsc-wls-validation: WLS (Gpr177/Wntless) expression in human dental pulp stem cells across four public scRNA-seq datasets"
+type: software
+authors:
+  - family-names: Islam
+    given-names: Md Tariqul
+    affiliation: The ADA Forsyth Institute
+repository-code: "https://github.com/mtariqi/dpsc-wls-validation"
+license: MIT
+keywords: [WLS, GPR177, Wntless, dental pulp stem cells, single-cell RNA-seq]
