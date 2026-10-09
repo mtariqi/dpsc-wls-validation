@@ -21,3 +21,6 @@ renv/staging/
 Nordic/
 wls_figures.zip
 Submission_9Oct/
+*.pptx
+*.docx
+.~lock*
