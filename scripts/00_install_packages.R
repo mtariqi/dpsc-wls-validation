@@ -1,4 +1,5 @@
 # =============================================================================
+# Authotr: Md Tariqul Islam | Northeastern University | Prof. Hsu Lab | ADA Forsyth Inst.
 # 00_install_packages.R  -  everything this repository needs (fresh R library)
 # Run from the repository root:  Rscript scripts/00_install_packages.R
 # =============================================================================
