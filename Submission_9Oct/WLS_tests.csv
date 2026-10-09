@@ -1,2 +1,0 @@
-"definition","comparison","n_DPSC","n_ref","pct_WLS_DPSC","pct_WLS_ref","log2FC","p_value","test","dataset"
-"sample label","DPSC vs PDLSC",2150,1865,69.4883720930233,83.6997319034853,-0.721394888421651,3.60350378682033e-59,"cell-level Wilcoxon, descriptive (1 donor)","GSE227731"
