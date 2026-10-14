@@ -50,20 +50,44 @@ prepare <- function(obj, dpsc_col) {
   grp[obj@meta.data[[dpsc_col]] %in% TRUE] <- "Candidate_DPSC"
   keep_levels <- c(intersect(ORDER, unique(grp)), setdiff(unique(grp), ORDER))
   obj$plot_group <- factor(grp, levels = keep_levels)
-  # groups with < 20 cells are kept on the UMAP but left out of dot/violin plots
+  # groups with < 50 cells are kept on the UMAP but left out of dot/violin plots
   obj
+}
+
+# One text label per cluster (at the cluster's median position), named by the cell type
+# most cells in that cluster carry, so labels sit on the clusters as in published UMAPs
+cluster_labels <- function(obj, red) {
+  clcol <- intersect(c("harmony_clusters", "seurat_clusters"), colnames(obj@meta.data))[1]
+  emb <- Embeddings(obj, red)[, 1:2]
+  df <- data.frame(x = emb[, 1], y = emb[, 2], group = as.character(obj$plot_group),
+                   cl = as.character(obj@meta.data[[clcol]]))
+  min_n <- max(15, round(0.005 * nrow(df)))
+  lab <- df %>% group_by(cl, group) %>%
+    summarise(n = n(), x = median(x), y = median(y), .groups = "drop") %>%
+    filter(n >= min_n)
+  # one label per cell type per cluster; drop repeats that sit on top of each other
+  lab %>% group_by(group) %>% arrange(desc(n), .by_group = TRUE) %>%
+    filter(!duplicated(paste(round(x / 2), round(y / 2)))) %>% ungroup()
 }
 
 tissue_figures <- function(obj, acc, subtitle, gene) {
   red <- umap_name(obj)
-  big <- names(which(table(obj$plot_group) >= 20))
+  min_cells <- if (ncol(obj) > 5000) 50 else 20   # small sound-tooth sample keeps 20
+  big <- names(which(table(obj$plot_group) >= min_cells))
   obj_big <- subset(obj, plot_group %in% big)
   obj_big$plot_group <- droplevels(obj_big$plot_group)
 
-  p_annot <- DimPlot(obj, reduction = red, group.by = "plot_group", label = TRUE, repel = TRUE,
-                     label.size = 3.5, raster = FALSE) +
+  lab <- cluster_labels(obj, red)
+  p_annot <- DimPlot(obj, reduction = red, group.by = "plot_group", label = FALSE, raster = FALSE) +
+    ggrepel::geom_text_repel(data = lab, aes(x = x, y = y, label = group), inherit.aes = FALSE,
+                             size = 3.3, fontface = "bold", box.padding = 0.4, min.segment.length = 0,
+                             max.overlaps = Inf, seed = 2026) +
     ggtitle(acc, subtitle = subtitle) + theme(legend.text = element_text(size = 9))
-  feats <- unique(c(unlist(MARKERS[intersect(ORDER, levels(obj_big$plot_group))]), gene))
+  # perivascular markers are always shown when candidate DPSCs are present, because
+  # candidate DPSCs sit in the perivascular population
+  show <- intersect(ORDER, c(levels(obj_big$plot_group),
+                             if ("Candidate_DPSC" %in% levels(obj_big$plot_group)) "Perivascular_MCAM"))
+  feats <- unique(c(unlist(MARKERS[show]), gene))
   feats <- feats[feats %in% rownames(obj)]
   p_dot <- DotPlot(obj_big, features = feats, group.by = "plot_group") + RotatedAxis() +
     ggtitle(paste0(acc, ": markers used to assign cell types (", gene, " last)")) +
