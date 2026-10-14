@@ -21,7 +21,9 @@ dir.create(out, recursive = TRUE, showWarnings = FALSE)
 
 MARKERS <- list(
   Pulp_fibroblast   = c("COL1A1", "DCN", "LUM", "PDGFRA"),
-  Candidate_DPSC    = c("THY1", "NT5E", "ENG", "NGFR", "FRZB", "LEPR", "PRRX1", "CXCL12"),
+  # AXIN2: Axin2+ DPSCs (Yoshida et al. 2025, J Dent Res). Shown in the dot plot only;
+  # the DPSC definition (stem score of the 8 genes) is unchanged.
+  Candidate_DPSC    = c("AXIN2", "THY1", "NT5E", "ENG", "NGFR", "FRZB", "LEPR", "PRRX1", "CXCL12"),
   Perivascular_MCAM = c("MCAM", "PDGFRB", "RGS5", "ACTA2"),
   Odontoblast       = c("DSPP", "DMP1", "PHEX"),
   Endothelial       = c("PECAM1", "CDH5", "VWF"),
@@ -113,6 +115,9 @@ if (!is.na(discovery_rds)) {
     stop("The GSE164157 object needs 'cell_type' and 'candidate_DPSC' columns (saved by 06_annotation.R)")
   d <- subset(d, cell_type %in% c("Epithelial", "Erythrocyte", "Unassigned"), invert = TRUE)
   d <- prepare(d, "candidate_DPSC")
+  p_donor <- DimPlot(d, reduction = umap_name(d), group.by = "sample", shuffle = TRUE, raster = FALSE) +
+    ggtitle("GSE164157: cells coloured by donor", subtitle = "Clusters contain cells from all donors after Harmony")
+  save_both(p_donor, "GSE164157_0_UMAP_by_donor", 7.5, 6)
   wls_row[["GSE164157"]] <- tissue_figures(d, "GSE164157", paste0("Fresh pulp, 5 donors, ", ncol(d), " cells"),
                                            target_symbol(d, load_config()))
   rm(d); gc()
@@ -148,6 +153,16 @@ p_wls <- FeaturePlot(obj, gene, reduction = red, order = TRUE) +
 p_vln <- VlnPlot(obj_big, gene, group.by = "plot_group", pt.size = 0.05) + NoLegend() +
   ggtitle(paste0(gene, " (Gpr177) - GSE227731")) + labs(x = NULL)
 save_both(p_annot, "GSE227731_1_UMAP_cell_types", 7.5, 6)
+p_sub <- DimPlot(obj, reduction = red, group.by = "plot_group", label = TRUE, repel = TRUE) +
+  ggtitle("GSE227731: DPSC sub-clusters and PDLSCs", subtitle = paste0(ncol(obj), " cells"))
+save_both(p_sub, "GSE227731_1b_UMAP_DPSC_subclusters", 7.5, 6)
+feats227 <- unique(c(MARKERS$Candidate_DPSC, MARKERS$Perivascular_MCAM, MARKERS$Pulp_fibroblast,
+                     "POSTN", "ASPN", "MKI67", "TOP2A", gene))
+feats227 <- feats227[feats227 %in% rownames(obj_big)]
+p_dot227 <- DotPlot(obj_big, features = feats227, group.by = "plot_group") + RotatedAxis() +
+  ggtitle("GSE227731: stem, perivascular, fibroblast, PDL (POSTN, ASPN) and cycling (MKI67, TOP2A) markers; WLS last") +
+  theme(axis.text.x = element_text(size = 8), plot.title = element_text(size = 10)) + labs(x = NULL, y = NULL)
+save_both(p_dot227, "GSE227731_2_marker_dotplot", 12, 4)
 save_both(p_annot + p_wls, "GSE227731_3_UMAP_cell_types_and_WLS", 14, 6)
 save_both(p_vln, "GSE227731_4_WLS_violin", 7, 4.5)
 wls_row[["GSE227731"]] <- p_wls
