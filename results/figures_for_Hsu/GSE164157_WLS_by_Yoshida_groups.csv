@@ -1,0 +1,41 @@
+"sample","group","n_cells","pct_WLS","mean_lognorm"
+"GSM4998457_Pulp1","AXIN2+ pulp (Yoshida DPSC)",12,33.3,0.521
+"GSM4998457_Pulp1","AXIN2- pulp cells",2779,20.6,0.295
+"GSM4998457_Pulp1","B_plasma",3,0,0
+"GSM4998457_Pulp1","Endothelial",923,13.5,0.111
+"GSM4998457_Pulp1","Myeloid",108,22.2,0.314
+"GSM4998457_Pulp1","Perivascular_MCAM",572,11,0.149
+"GSM4998457_Pulp1","Schwann_glia",350,12.9,0.18
+"GSM4998457_Pulp1","T_NK",19,15.8,0.229
+"GSM4998458_Pulp2","AXIN2+ pulp (Yoshida DPSC)",19,21.1,0.369
+"GSM4998458_Pulp2","AXIN2- pulp cells",2203,15.3,0.278
+"GSM4998458_Pulp2","B_plasma",82,2.4,0.026
+"GSM4998458_Pulp2","Endothelial",1878,6.9,0.075
+"GSM4998458_Pulp2","Myeloid",52,7.7,0.145
+"GSM4998458_Pulp2","Perivascular_MCAM",854,5.9,0.11
+"GSM4998458_Pulp2","Schwann_glia",241,7.1,0.126
+"GSM4998458_Pulp2","T_NK",65,6.2,0.105
+"GSM4998459_Pulp3","AXIN2+ pulp (Yoshida DPSC)",5,0,0
+"GSM4998459_Pulp3","AXIN2- pulp cells",2327,6.3,0.165
+"GSM4998459_Pulp3","B_plasma",11,0,0
+"GSM4998459_Pulp3","Endothelial",1620,2.3,0.043
+"GSM4998459_Pulp3","Myeloid",108,7.4,0.193
+"GSM4998459_Pulp3","Perivascular_MCAM",929,1.3,0.036
+"GSM4998459_Pulp3","Schwann_glia",201,1.5,0.036
+"GSM4998459_Pulp3","T_NK",123,1.6,0.044
+"GSM4998460_Pulp4","AXIN2+ pulp (Yoshida DPSC)",7,57.1,1.162
+"GSM4998460_Pulp4","AXIN2- pulp cells",1212,23.6,0.347
+"GSM4998460_Pulp4","B_plasma",22,0,0
+"GSM4998460_Pulp4","Endothelial",549,7.8,0.079
+"GSM4998460_Pulp4","Myeloid",319,24.8,0.515
+"GSM4998460_Pulp4","Perivascular_MCAM",231,13.4,0.201
+"GSM4998460_Pulp4","Schwann_glia",763,19,0.355
+"GSM4998460_Pulp4","T_NK",576,0.2,0.004
+"GSM4998461_Pulp5","AXIN2+ pulp (Yoshida DPSC)",13,30.8,0.337
+"GSM4998461_Pulp5","AXIN2- pulp cells",1020,22.2,0.35
+"GSM4998461_Pulp5","B_plasma",40,2.5,0.076
+"GSM4998461_Pulp5","Endothelial",748,9.1,0.082
+"GSM4998461_Pulp5","Myeloid",245,20,0.402
+"GSM4998461_Pulp5","Perivascular_MCAM",291,17.5,0.276
+"GSM4998461_Pulp5","Schwann_glia",745,12.2,0.233
+"GSM4998461_Pulp5","T_NK",909,0.9,0.018

@@ -34,6 +34,57 @@ MARKERS <- list(
 )
 ORDER <- names(MARKERS)
 
+# Marker panels from Yoshida et al. 2025 (J Dent Res; Fig. 1, Appendix Figs 1-2), human orthologs.
+# Mouse-only Slfn3 is omitted.
+YOSHIDA <- list(
+  Macrophage    = c("AIF1", "C1QA", "C1QC", "CSF1R"),
+  NK_T          = c("DPP4", "ITGB7", "CD37", "CCR2"),
+  Glial         = c("PLP1", "ANK3", "MAL", "GJC3", "CADM4"),
+  Perivascular  = c("LMOD1", "ACTA2", "MYH11", "TAGLN", "MYL9"),
+  Pulp_Nestin   = c("NES"),
+  Odontoblast   = c("DCN", "COL1A1", "MMP2", "TNC", "COCH", "DMP1"),
+  PC2           = c("STC1", "CPM", "FAM167A", "TIAM2", "DES"),
+  PC1           = c("ADGRL4", "ANKRD33B", "RBP7", "SH2D3C", "ALOX12"),
+  DPSC1         = c("AXIN2", "BMP4", "BMP6", "BMX", "FBLN2"),
+  DPSC2         = c("CDH4", "ACKR1", "SELP")
+)
+PULP_TYPES <- c("Pulp_fibroblast", "MSC_progenitor", "Odontoblast")   # non-perivascular mesenchyme
+
+# Yoshida definition: DPSCs are Axin2+ pulp (Nestin+) cells that are NOT perivascular.
+# Here: AXIN2 count > 0 among non-perivascular mesenchymal cells.
+yoshida_figures <- function(obj, acc, subtitle, gene, min_cells) {
+  ax <- if ("AXIN2" %in% rownames(obj)) FetchData(obj, "AXIN2")[, 1] > 0 else rep(FALSE, ncol(obj))
+  pulp <- as.character(obj$cell_type) %in% PULP_TYPES
+  grp <- as.character(obj$cell_type)
+  grp[pulp & ax]  <- "AXIN2+ pulp (Yoshida DPSC)"
+  grp[pulp & !ax] <- "AXIN2- pulp cells"
+  obj$yosh_group <- grp
+  lv <- c("AXIN2+ pulp (Yoshida DPSC)", "AXIN2- pulp cells",
+          sort(setdiff(unique(grp), c("AXIN2+ pulp (Yoshida DPSC)", "AXIN2- pulp cells"))))
+  obj$yosh_group <- factor(grp, levels = lv)
+
+  expr <- FetchData(obj, gene)[, 1]
+  tab <- data.frame(sample = obj$sample, group = obj$yosh_group, wls = expr) %>%
+    group_by(sample, group) %>%
+    summarise(n_cells = n(), pct_WLS = round(100 * mean(wls > 0), 1),
+              mean_lognorm = round(mean(wls), 3), .groups = "drop")
+  write.csv(tab, file.path(out, paste0(acc, "_WLS_by_Yoshida_groups.csv")), row.names = FALSE)
+
+  keep <- names(which(table(obj$yosh_group) >= min_cells))
+  oy <- subset(obj, yosh_group %in% keep)
+  oy$yosh_group <- droplevels(oy$yosh_group)
+  feats <- unique(unlist(YOSHIDA)); feats <- c(feats[feats %in% rownames(obj)], gene)
+  p_dot <- DotPlot(oy, features = unique(feats), group.by = "yosh_group") + RotatedAxis() +
+    ggtitle(paste0(acc, ": Yoshida et al. 2025 markers (human orthologs); WLS last")) +
+    theme(axis.text.x = element_text(size = 7)) + labs(x = NULL, y = NULL)
+  p_vln <- VlnPlot(oy, gene, group.by = "yosh_group", pt.size = 0.05) + NoLegend() +
+    ggtitle(paste0(gene, " (Gpr177) - ", acc, ": AXIN2+ pulp cells (Yoshida DPSC) and other cells")) +
+    labs(x = NULL) + theme(plot.title = element_text(size = 11))
+  save_both(p_dot, paste0(acc, "_5_Yoshida_marker_dotplot"), 14, 4.8)
+  save_both(p_vln, paste0(acc, "_6_WLS_violin_Yoshida_groups"), 8, 4.8)
+  print(tab %>% group_by(group) %>% summarise(cells = sum(n_cells), median_pct_WLS = median(pct_WLS)))
+}
+
 umap_name <- function(obj) {
   r <- grep("umap", Reductions(obj), value = TRUE, ignore.case = TRUE)
   r <- r[!grepl("mes", r)]
@@ -103,6 +154,7 @@ tissue_figures <- function(obj, acc, subtitle, gene) {
   save_both(p_dot, paste0(acc, "_2_marker_dotplot"), 12, 4.5)
   save_both(p_annot + p_wls, paste0(acc, "_3_UMAP_cell_types_and_WLS"), 14, 6)
   save_both(p_vln, paste0(acc, "_4_WLS_violin"), 7, 4.5)
+  yoshida_figures(obj, acc, subtitle, gene, min_cells)
   p_wls
 }
 
@@ -163,6 +215,16 @@ p_dot227 <- DotPlot(obj_big, features = feats227, group.by = "plot_group") + Rot
   ggtitle("GSE227731: stem, perivascular, fibroblast, PDL (POSTN, ASPN) and cycling (MKI67, TOP2A) markers; WLS last") +
   theme(axis.text.x = element_text(size = 8), plot.title = element_text(size = 10)) + labs(x = NULL, y = NULL)
 save_both(p_dot227, "GSE227731_2_marker_dotplot", 12, 4)
+ax227 <- if ("AXIN2" %in% rownames(obj)) FetchData(obj, "AXIN2")[, 1] > 0 else rep(FALSE, ncol(obj))
+obj$yosh_group <- factor(ifelse(obj$cell_type == "DPSC", ifelse(ax227, "AXIN2+ DPSC", "AXIN2- DPSC"), "PDLSC"),
+                         levels = c("AXIN2+ DPSC", "AXIN2- DPSC", "PDLSC"))
+tab227 <- data.frame(group = obj$yosh_group, wls = FetchData(obj, gene)[, 1]) %>% group_by(group) %>%
+  summarise(n_cells = n(), pct_WLS = round(100 * mean(wls > 0), 1), mean_lognorm = round(mean(wls), 3))
+write.csv(tab227, file.path(out, "GSE227731_WLS_by_Yoshida_groups.csv"), row.names = FALSE)
+print(tab227)
+p_vy <- VlnPlot(obj, gene, group.by = "yosh_group", pt.size = 0.05) + NoLegend() +
+  ggtitle(paste0(gene, " (Gpr177) - GSE227731: AXIN2+ vs AXIN2- DPSCs and PDLSCs")) + labs(x = NULL)
+save_both(p_vy, "GSE227731_6_WLS_violin_Yoshida_groups", 6.5, 4.5)
 save_both(p_annot + p_wls, "GSE227731_3_UMAP_cell_types_and_WLS", 14, 6)
 save_both(p_vln, "GSE227731_4_WLS_violin", 7, 4.5)
 wls_row[["GSE227731"]] <- p_wls
