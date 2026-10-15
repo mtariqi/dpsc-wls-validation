@@ -1,6 +1,6 @@
 "sample","group","n_cells","pct_WLS","mean_lognorm"
-"Youth_pulp","AXIN2+ pulp (Yoshida DPSC)",301,61.1,0.488
-"Youth_pulp","AXIN2- pulp cells",5225,49.9,0.444
+"Youth_pulp","AXIN2+ pulp",301,61.1,0.488
+"Youth_pulp","AXIN2- pulp",5225,49.9,0.444
 "Youth_pulp","Endothelial",1425,24.1,0.206
 "Youth_pulp","Myeloid",1633,36.8,0.497
 "Youth_pulp","Perivascular_MCAM",1017,33.6,0.319

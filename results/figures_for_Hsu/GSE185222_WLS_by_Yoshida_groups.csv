@@ -1,6 +1,6 @@
 "sample","group","n_cells","pct_WLS","mean_lognorm"
-"DTP_01","AXIN2+ pulp (Yoshida DPSC)",3,0,0
-"DTP_01","AXIN2- pulp cells",479,23.6,0.436
+"DTP_01","AXIN2+ pulp",3,0,0
+"DTP_01","AXIN2- pulp",479,23.6,0.436
 "DTP_01","B_plasma",1,0,0
 "DTP_01","Endothelial",146,7.5,0.13
 "DTP_01","Myeloid",75,14.7,0.373

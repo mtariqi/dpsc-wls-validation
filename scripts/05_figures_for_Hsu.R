@@ -56,11 +56,11 @@ yoshida_figures <- function(obj, acc, subtitle, gene, min_cells) {
   ax <- if ("AXIN2" %in% rownames(obj)) FetchData(obj, "AXIN2")[, 1] > 0 else rep(FALSE, ncol(obj))
   pulp <- as.character(obj$cell_type) %in% PULP_TYPES
   grp <- as.character(obj$cell_type)
-  grp[pulp & ax]  <- "AXIN2+ pulp (Yoshida DPSC)"
-  grp[pulp & !ax] <- "AXIN2- pulp cells"
+  grp[pulp & ax]  <- "AXIN2+ pulp"
+  grp[pulp & !ax] <- "AXIN2- pulp"
   obj$yosh_group <- grp
-  lv <- c("AXIN2+ pulp (Yoshida DPSC)", "AXIN2- pulp cells",
-          sort(setdiff(unique(grp), c("AXIN2+ pulp (Yoshida DPSC)", "AXIN2- pulp cells"))))
+  lv <- c("AXIN2+ pulp", "AXIN2- pulp",
+          sort(setdiff(unique(grp), c("AXIN2+ pulp", "AXIN2- pulp"))))
   obj$yosh_group <- factor(grp, levels = lv)
 
   expr <- FetchData(obj, gene)[, 1]
@@ -79,17 +79,41 @@ yoshida_figures <- function(obj, acc, subtitle, gene, min_cells) {
     theme(axis.text.x = element_text(size = 7)) + labs(x = NULL, y = NULL)
   p_vln <- VlnPlot(oy, gene, group.by = "yosh_group", pt.size = 0.05) + NoLegend() +
     ggtitle(paste0(gene, " (Gpr177) - ", acc, ": AXIN2+ pulp cells (Yoshida DPSC) and other cells")) +
-    labs(x = NULL) + theme(plot.title = element_text(size = 11))
+    labs(x = NULL) + theme(plot.title = element_text(size = 11), plot.margin = margin(5, 5, 5, 25))
+  # Depth check: AXIN2 and WLS are both easier to detect in cells with more UMIs, so compare
+  # AXIN2+ vs AXIN2- pulp cells with and without adjusting for log10(UMIs) (and donor if > 1)
+  dd <- data.frame(wls = expr > 0, ax = ax, lc = log10(obj$nCount_RNA), sample = obj$sample)[pulp, ]
+  if (sum(dd$ax) >= 10 && sum(!dd$ax) >= 10) {
+    f_un <- if (length(unique(dd$sample)) > 1) wls ~ ax + sample else wls ~ ax
+    f_ad <- if (length(unique(dd$sample)) > 1) wls ~ ax + lc + sample else wls ~ ax + lc
+    m_un <- summary(glm(f_un, family = binomial, data = dd))$coefficients["axTRUE", ]
+    m_ad <- summary(glm(f_ad, family = binomial, data = dd))$coefficients["axTRUE", ]
+    dc <- data.frame(dataset = acc, n_AXIN2pos = sum(dd$ax), n_AXIN2neg = sum(!dd$ax),
+                     median_UMI_AXIN2pos = median(10^dd$lc[dd$ax]), median_UMI_AXIN2neg = median(10^dd$lc[!dd$ax]),
+                     OR_unadjusted = exp(m_un[1]), p_unadjusted = m_un[4],
+                     OR_depth_adjusted = exp(m_ad[1]),
+                     OR_adj_low95 = exp(m_ad[1] - 1.96 * m_ad[2]), OR_adj_high95 = exp(m_ad[1] + 1.96 * m_ad[2]),
+                     p_depth_adjusted = m_ad[4])
+  } else {
+    dc <- data.frame(dataset = acc, n_AXIN2pos = sum(dd$ax), n_AXIN2neg = sum(!dd$ax),
+                     note = "fewer than 10 AXIN2+ pulp cells: not tested")
+  }
+  write.csv(dc, file.path(out, paste0(acc, "_Yoshida_depth_check.csv")), row.names = FALSE)
+  print(dc)
   save_both(p_dot, paste0(acc, "_5_Yoshida_marker_dotplot"), 14, 4.8)
   save_both(p_vln, paste0(acc, "_6_WLS_violin_Yoshida_groups"), 8, 4.8)
   print(tab %>% group_by(group) %>% summarise(cells = sum(n_cells), median_pct_WLS = median(pct_WLS)))
 }
 
+# Use the integrated (Harmony) UMAP when an object has several UMAPs
 umap_name <- function(obj) {
   r <- grep("umap", Reductions(obj), value = TRUE, ignore.case = TRUE)
   r <- r[!grepl("mes", r)]
   if (length(r) == 0) stop("No UMAP reduction found")
-  r[1]
+  pref <- r[grepl("harmony", r, ignore.case = TRUE) & !grepl("unintegrated", r, ignore.case = TRUE)]
+  pick <- if (length(pref)) pref[1] else r[1]
+  message("UMAP reductions: ", paste(r, collapse = ", "), "  -> using: ", pick)
+  pick
 }
 
 save_both <- function(p, name, w, h) {
@@ -168,7 +192,7 @@ if (!is.na(discovery_rds)) {
   d <- subset(d, cell_type %in% c("Epithelial", "Erythrocyte", "Unassigned"), invert = TRUE)
   d <- prepare(d, "candidate_DPSC")
   p_donor <- DimPlot(d, reduction = umap_name(d), group.by = "sample", shuffle = TRUE, raster = FALSE) +
-    ggtitle("GSE164157: cells coloured by donor", subtitle = "Clusters contain cells from all donors after Harmony")
+    ggtitle("GSE164157: cells coloured by donor", subtitle = "Same UMAP as the cell-type figures")
   save_both(p_donor, "GSE164157_0_UMAP_by_donor", 7.5, 6)
   wls_row[["GSE164157"]] <- tissue_figures(d, "GSE164157", paste0("Fresh pulp, 5 donors, ", ncol(d), " cells"),
                                            target_symbol(d, load_config()))

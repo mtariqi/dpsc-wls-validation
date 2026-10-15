@@ -1,0 +1,2 @@
+"dataset","n_AXIN2pos","n_AXIN2neg","median_UMI_AXIN2pos","median_UMI_AXIN2neg","OR_unadjusted","p_unadjusted","OR_depth_adjusted","OR_adj_low95","OR_adj_high95","p_depth_adjusted"
+"GSE202476",301,5225,13068,10457,1.57807648920657,0.000171909903837938,1.18512690523258,0.923277601799019,1.52123887633515,0.182415247483044
