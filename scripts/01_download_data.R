@@ -7,7 +7,7 @@
 # Last updated: 2026-11-04
 # ------------------------------------------------------------------------------
 # Purpose:      Downloads the processed count matrices of GSE185222, GSE202476
-                and GSE227731 with GEOquery.
+#               and GSE227731 with GEOquery.
 # Inputs:       None (GEO accession numbers are set in the script).
 # Outputs:      data/raw/<GEO>/ with the supplementary files and FILE_LIST.txt.
 # Usage:        Rscript scripts/01_download_data.R
@@ -23,7 +23,9 @@
 # Run from the repository root:  Rscript scripts/01_download_data.R
 # ==============================================================================
 
-suppressPackageStartupMessages({ library(GEOquery) })
+suppressPackageStartupMessages({
+  library(GEOquery)
+})
 options(timeout = 3600)
 
 for (acc in c("GSE185222", "GSE202476", "GSE227731")) {
@@ -37,7 +39,8 @@ for (acc in c("GSE185222", "GSE202476", "GSE227731")) {
 
   # 2. If the series had no matrices, fall back to sample-level files
   have_counts <- length(list.files(out, "matrix\\.mtx|\\.h5$|count|umi|\\.csv",
-                                   recursive = TRUE, ignore.case = TRUE)) > 0
+    recursive = TRUE, ignore.case = TRUE
+  )) > 0
   if (!have_counts) {
     gse <- getGEO(acc, GSEMatrix = FALSE)
     for (gsm in names(GSMList(gse))) try(getGEOSuppFiles(gsm, baseDir = out))
@@ -47,5 +50,7 @@ for (acc in c("GSE185222", "GSE202476", "GSE227731")) {
   writeLines(files, file.path(out, "FILE_LIST.txt"))
   message(length(files), " files; see ", file.path(out, "FILE_LIST.txt"))
 }
-message("\nNext: check the FILE_LIST.txt files, ",
-        "then run scripts/02_preprocess.R <accession>")
+message(
+  "\nNext: check the FILE_LIST.txt files, ",
+  "then run scripts/02_preprocess.R <accession>"
+)

@@ -7,7 +7,7 @@
 # Last updated: 2026-11-04
 # ------------------------------------------------------------------------------
 # Purpose:      Installs the CRAN and Bioconductor packages used by the
-                pipeline and records exact versions in renv.lock.
+#               pipeline and records exact versions in renv.lock.
 # Inputs:       None.
 # Outputs:      renv.lock; project package library (renv/).
 # Usage:        Rscript scripts/00_install_packages.R
@@ -25,8 +25,10 @@
 options(repos = c(CRAN = "https://cloud.r-project.org"))
 if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
 
-cran <- c("Seurat", "harmony", "Matrix", "dplyr", "ggplot2", "yaml",
-          "data.table", "hdf5r", "R.utils", "renv")
+cran <- c(
+  "Seurat", "harmony", "Matrix", "dplyr", "ggplot2", "yaml",
+  "data.table", "hdf5r", "R.utils", "renv"
+)
 bioc <- c("GEOquery", "edgeR", "scDblFinder", "SingleCellExperiment")
 
 install.packages(setdiff(cran, rownames(installed.packages())))

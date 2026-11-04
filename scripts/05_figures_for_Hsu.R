@@ -7,16 +7,16 @@
 # Last updated: 2026-11-04
 # ------------------------------------------------------------------------------
 # Purpose:      Makes labelled UMAPs, marker dot plots, WLS UMAPs and violins
-                for all datasets; applies the Yoshida et al. (2025) marker
-                panels and AXIN2+ pulp-cell DPSC definition; tests WLS in
-                AXIN2+ vs AXIN2- pulp cells with depth-adjusted logistic
-                regression.
+#               for all datasets; applies the Yoshida et al. (2025) marker
+#               panels and AXIN2+ pulp-cell DPSC definition; tests WLS in
+#               AXIN2+ vs AXIN2- pulp cells with depth-adjusted logistic
+#               regression.
 # Inputs:       data/processed/<GEO>_preprocessed.rds; annotated GSE164157
-                object from the discovery repository.
+#               object from the discovery repository.
 # Outputs:      results/figures_for_Hsu/ (PNG, PDF,
-                *_WLS_by_Yoshida_groups.csv, *_Yoshida_depth_check.csv).
+#               *_WLS_by_Yoshida_groups.csv, *_Yoshida_depth_check.csv).
 # Usage:        Rscript scripts/05_figures_for_Hsu.R <path to
-                GSE164157_annotated.rds>
+#               GSE164157_annotated.rds>
 # Dependencies: R 4.6; Seurat 5, harmony, scDblFinder, edgeR, GEOquery, ggplot2,
 #               patchwork, dplyr (exact versions in renv.lock)
 # Development:  Written with AI assistance (Claude, Anthropic); reviewed, run and
@@ -72,7 +72,7 @@ YOSHIDA <- list(
   DPSC1         = c("AXIN2", "BMP4", "BMP6", "BMX", "FBLN2"),
   DPSC2         = c("CDH4", "ACKR1", "SELP")
 )
-PULP_TYPES <- c("Pulp_fibroblast", "MSC_progenitor", "Odontoblast")   # non-perivascular mesenchyme
+PULP_TYPES <- c("Pulp_fibroblast", "MSC_progenitor", "Odontoblast") # non-perivascular mesenchyme
 
 # Yoshida definition: DPSCs are Axin2+ pulp (Nestin+) cells that are NOT perivascular.
 # Here: AXIN2 count > 0 among non-perivascular mesenchymal cells.
@@ -80,24 +80,29 @@ yoshida_figures <- function(obj, acc, subtitle, gene, min_cells) {
   ax <- if ("AXIN2" %in% rownames(obj)) FetchData(obj, "AXIN2")[, 1] > 0 else rep(FALSE, ncol(obj))
   pulp <- as.character(obj$cell_type) %in% PULP_TYPES
   grp <- as.character(obj$cell_type)
-  grp[pulp & ax]  <- "AXIN2+ pulp"
+  grp[pulp & ax] <- "AXIN2+ pulp"
   grp[pulp & !ax] <- "AXIN2- pulp"
   obj$yosh_group <- grp
-  lv <- c("AXIN2+ pulp", "AXIN2- pulp",
-          sort(setdiff(unique(grp), c("AXIN2+ pulp", "AXIN2- pulp"))))
+  lv <- c(
+    "AXIN2+ pulp", "AXIN2- pulp",
+    sort(setdiff(unique(grp), c("AXIN2+ pulp", "AXIN2- pulp")))
+  )
   obj$yosh_group <- factor(grp, levels = lv)
 
   expr <- FetchData(obj, gene)[, 1]
   tab <- data.frame(sample = obj$sample, group = obj$yosh_group, wls = expr) %>%
     group_by(sample, group) %>%
-    summarise(n_cells = n(), pct_WLS = round(100 * mean(wls > 0), 1),
-              mean_lognorm = round(mean(wls), 3), .groups = "drop")
+    summarise(
+      n_cells = n(), pct_WLS = round(100 * mean(wls > 0), 1),
+      mean_lognorm = round(mean(wls), 3), .groups = "drop"
+    )
   write.csv(tab, file.path(out, paste0(acc, "_WLS_by_Yoshida_groups.csv")), row.names = FALSE)
 
   keep <- names(which(table(obj$yosh_group) >= min_cells))
   oy <- subset(obj, yosh_group %in% keep)
   oy$yosh_group <- droplevels(oy$yosh_group)
-  feats <- unique(unlist(YOSHIDA)); feats <- c(feats[feats %in% rownames(obj)], gene)
+  feats <- unique(unlist(YOSHIDA))
+  feats <- c(feats[feats %in% rownames(obj)], gene)
   p_dot <- DotPlot(oy, features = unique(feats), group.by = "yosh_group") + RotatedAxis() +
     ggtitle(paste0(acc, ": Yoshida et al. 2025 markers (human orthologs); WLS last")) +
     theme(axis.text.x = element_text(size = 7)) + labs(x = NULL, y = NULL)
@@ -112,15 +117,19 @@ yoshida_figures <- function(obj, acc, subtitle, gene, min_cells) {
     f_ad <- if (length(unique(dd$sample)) > 1) wls ~ ax + lc + sample else wls ~ ax + lc
     m_un <- summary(glm(f_un, family = binomial, data = dd))$coefficients["axTRUE", ]
     m_ad <- summary(glm(f_ad, family = binomial, data = dd))$coefficients["axTRUE", ]
-    dc <- data.frame(dataset = acc, n_AXIN2pos = sum(dd$ax), n_AXIN2neg = sum(!dd$ax),
-                     median_UMI_AXIN2pos = median(10^dd$lc[dd$ax]), median_UMI_AXIN2neg = median(10^dd$lc[!dd$ax]),
-                     OR_unadjusted = exp(m_un[1]), p_unadjusted = m_un[4],
-                     OR_depth_adjusted = exp(m_ad[1]),
-                     OR_adj_low95 = exp(m_ad[1] - 1.96 * m_ad[2]), OR_adj_high95 = exp(m_ad[1] + 1.96 * m_ad[2]),
-                     p_depth_adjusted = m_ad[4])
+    dc <- data.frame(
+      dataset = acc, n_AXIN2pos = sum(dd$ax), n_AXIN2neg = sum(!dd$ax),
+      median_UMI_AXIN2pos = median(10^dd$lc[dd$ax]), median_UMI_AXIN2neg = median(10^dd$lc[!dd$ax]),
+      OR_unadjusted = exp(m_un[1]), p_unadjusted = m_un[4],
+      OR_depth_adjusted = exp(m_ad[1]),
+      OR_adj_low95 = exp(m_ad[1] - 1.96 * m_ad[2]), OR_adj_high95 = exp(m_ad[1] + 1.96 * m_ad[2]),
+      p_depth_adjusted = m_ad[4]
+    )
   } else {
-    dc <- data.frame(dataset = acc, n_AXIN2pos = sum(dd$ax), n_AXIN2neg = sum(!dd$ax),
-                     note = "fewer than 10 AXIN2+ pulp cells: not tested")
+    dc <- data.frame(
+      dataset = acc, n_AXIN2pos = sum(dd$ax), n_AXIN2neg = sum(!dd$ax),
+      note = "fewer than 10 AXIN2+ pulp cells: not tested"
+    )
   }
   write.csv(dc, file.path(out, paste0(acc, "_Yoshida_depth_check.csv")), row.names = FALSE)
   print(dc)
@@ -160,34 +169,44 @@ prepare <- function(obj, dpsc_col) {
 cluster_labels <- function(obj, red) {
   clcol <- intersect(c("harmony_clusters", "seurat_clusters"), colnames(obj@meta.data))[1]
   emb <- Embeddings(obj, red)[, 1:2]
-  df <- data.frame(x = emb[, 1], y = emb[, 2], group = as.character(obj$plot_group),
-                   cl = as.character(obj@meta.data[[clcol]]))
+  df <- data.frame(
+    x = emb[, 1], y = emb[, 2], group = as.character(obj$plot_group),
+    cl = as.character(obj@meta.data[[clcol]])
+  )
   min_n <- max(15, round(0.005 * nrow(df)))
-  lab <- df %>% group_by(cl, group) %>%
+  lab <- df %>%
+    group_by(cl, group) %>%
     summarise(n = n(), x = median(x), y = median(y), .groups = "drop") %>%
     filter(n >= min_n)
   # one label per cell type per cluster; drop repeats that sit on top of each other
-  lab %>% group_by(group) %>% arrange(desc(n), .by_group = TRUE) %>%
-    filter(!duplicated(paste(round(x / 2), round(y / 2)))) %>% ungroup()
+  lab %>%
+    group_by(group) %>%
+    arrange(desc(n), .by_group = TRUE) %>%
+    filter(!duplicated(paste(round(x / 2), round(y / 2)))) %>%
+    ungroup()
 }
 
 tissue_figures <- function(obj, acc, subtitle, gene) {
   red <- umap_name(obj)
-  min_cells <- if (ncol(obj) > 5000) 50 else 20   # small sound-tooth sample keeps 20
+  min_cells <- if (ncol(obj) > 5000) 50 else 20 # small sound-tooth sample keeps 20
   big <- names(which(table(obj$plot_group) >= min_cells))
   obj_big <- subset(obj, plot_group %in% big)
   obj_big$plot_group <- droplevels(obj_big$plot_group)
 
   lab <- cluster_labels(obj, red)
   p_annot <- DimPlot(obj, reduction = red, group.by = "plot_group", label = FALSE, raster = FALSE) +
-    ggrepel::geom_text_repel(data = lab, aes(x = x, y = y, label = group), inherit.aes = FALSE,
-                             size = 3.3, fontface = "bold", box.padding = 0.4, min.segment.length = 0,
-                             max.overlaps = Inf, seed = 2026) +
+    ggrepel::geom_text_repel(
+      data = lab, aes(x = x, y = y, label = group), inherit.aes = FALSE,
+      size = 3.3, fontface = "bold", box.padding = 0.4, min.segment.length = 0,
+      max.overlaps = Inf, seed = 2026
+    ) +
     ggtitle(acc, subtitle = subtitle) + theme(legend.text = element_text(size = 9))
   # perivascular markers are always shown when candidate DPSCs are present, because
   # candidate DPSCs sit in the perivascular population
-  show <- intersect(ORDER, c(levels(obj_big$plot_group),
-                             if ("Candidate_DPSC" %in% levels(obj_big$plot_group)) "Perivascular_MCAM"))
+  show <- intersect(ORDER, c(
+    levels(obj_big$plot_group),
+    if ("Candidate_DPSC" %in% levels(obj_big$plot_group)) "Perivascular_MCAM"
+  ))
   feats <- unique(c(unlist(MARKERS[show]), gene))
   feats <- feats[feats %in% rownames(obj)]
   p_dot <- DotPlot(obj_big, features = feats, group.by = "plot_group") + RotatedAxis() +
@@ -211,16 +230,20 @@ wls_row <- list()
 # ---- 1. Discovery dataset GSE164157 ---------------------------------------------
 if (!is.na(discovery_rds)) {
   d <- readRDS(path.expand(discovery_rds))
-  if (!"cell_type" %in% colnames(d@meta.data) || !"candidate_DPSC" %in% colnames(d@meta.data))
+  if (!"cell_type" %in% colnames(d@meta.data) || !"candidate_DPSC" %in% colnames(d@meta.data)) {
     stop("The GSE164157 object needs 'cell_type' and 'candidate_DPSC' columns (saved by 06_annotation.R)")
+  }
   d <- subset(d, cell_type %in% c("Epithelial", "Erythrocyte", "Unassigned"), invert = TRUE)
   d <- prepare(d, "candidate_DPSC")
   p_donor <- DimPlot(d, reduction = umap_name(d), group.by = "sample", shuffle = TRUE, raster = FALSE) +
     ggtitle("GSE164157: cells coloured by donor", subtitle = "Same UMAP as the cell-type figures")
   save_both(p_donor, "GSE164157_0_UMAP_by_donor", 7.5, 6)
-  wls_row[["GSE164157"]] <- tissue_figures(d, "GSE164157", paste0("Fresh pulp, 5 donors, ", ncol(d), " cells"),
-                                           target_symbol(d, load_config()))
-  rm(d); gc()
+  wls_row[["GSE164157"]] <- tissue_figures(
+    d, "GSE164157", paste0("Fresh pulp, 5 donors, ", ncol(d), " cells"),
+    target_symbol(d, load_config())
+  )
+  rm(d)
+  gc()
 } else {
   message("No GSE164157 object given: skipping the discovery dataset")
 }
@@ -234,7 +257,8 @@ for (acc in c("GSE202476", "GSE185222")) {
   obj <- prepare(obj, "A_stem_subclusters")
   sub <- if (acc == "GSE202476") "Young tooth" else "Sound tooth (DTP_01)"
   wls_row[[acc]] <- tissue_figures(obj, acc, paste0(sub, ", ", ncol(obj), " cells"), target_symbol(obj, cfg))
-  rm(obj); gc()
+  rm(obj)
+  gc()
 }
 
 # ---- 3. GSE227731: DPSCs vs PDLSCs, with DPSC sub-clusters ---------------------------
@@ -256,8 +280,10 @@ save_both(p_annot, "GSE227731_1_UMAP_cell_types", 7.5, 6)
 p_sub <- DimPlot(obj, reduction = red, group.by = "plot_group", label = TRUE, repel = TRUE) +
   ggtitle("GSE227731: DPSC sub-clusters and PDLSCs", subtitle = paste0(ncol(obj), " cells"))
 save_both(p_sub, "GSE227731_1b_UMAP_DPSC_subclusters", 7.5, 6)
-feats227 <- unique(c(MARKERS$Candidate_DPSC, MARKERS$Perivascular_MCAM, MARKERS$Pulp_fibroblast,
-                     "POSTN", "ASPN", "MKI67", "TOP2A", gene))
+feats227 <- unique(c(
+  MARKERS$Candidate_DPSC, MARKERS$Perivascular_MCAM, MARKERS$Pulp_fibroblast,
+  "POSTN", "ASPN", "MKI67", "TOP2A", gene
+))
 feats227 <- feats227[feats227 %in% rownames(obj_big)]
 p_dot227 <- DotPlot(obj_big, features = feats227, group.by = "plot_group") + RotatedAxis() +
   ggtitle("GSE227731: stem, perivascular, fibroblast, PDL (POSTN, ASPN) and cycling (MKI67, TOP2A) markers; WLS last") +
@@ -265,8 +291,10 @@ p_dot227 <- DotPlot(obj_big, features = feats227, group.by = "plot_group") + Rot
 save_both(p_dot227, "GSE227731_2_marker_dotplot", 12, 4)
 ax227 <- if ("AXIN2" %in% rownames(obj)) FetchData(obj, "AXIN2")[, 1] > 0 else rep(FALSE, ncol(obj))
 obj$yosh_group <- factor(ifelse(obj$cell_type == "DPSC", ifelse(ax227, "AXIN2+ DPSC", "AXIN2- DPSC"), "PDLSC"),
-                         levels = c("AXIN2+ DPSC", "AXIN2- DPSC", "PDLSC"))
-tab227 <- data.frame(group = obj$yosh_group, wls = FetchData(obj, gene)[, 1]) %>% group_by(group) %>%
+  levels = c("AXIN2+ DPSC", "AXIN2- DPSC", "PDLSC")
+)
+tab227 <- data.frame(group = obj$yosh_group, wls = FetchData(obj, gene)[, 1]) %>%
+  group_by(group) %>%
   summarise(n_cells = n(), pct_WLS = round(100 * mean(wls > 0), 1), mean_lognorm = round(mean(wls), 3))
 write.csv(tab227, file.path(out, "GSE227731_WLS_by_Yoshida_groups.csv"), row.names = FALSE)
 print(tab227)
@@ -276,7 +304,8 @@ save_both(p_vy, "GSE227731_6_WLS_violin_Yoshida_groups", 6.5, 4.5)
 save_both(p_annot + p_wls, "GSE227731_3_UMAP_cell_types_and_WLS", 14, 6)
 save_both(p_vln, "GSE227731_4_WLS_violin", 7, 4.5)
 wls_row[["GSE227731"]] <- p_wls
-rm(obj, obj_big); gc()
+rm(obj, obj_big)
+gc()
 
 # ---- 4. One row of WLS UMAPs for all datasets --------------------------------------
 row <- wrap_plots(wls_row, nrow = 1)

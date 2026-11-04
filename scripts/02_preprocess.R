@@ -7,16 +7,16 @@
 # Last updated: 2026-11-04
 # ------------------------------------------------------------------------------
 # Purpose:      Loads one dataset, filters cells (genes > 200, UMIs > 500,
-                mitochondrial < 20%), removes doublets (scDblFinder),
-                integrates samples (Harmony), clusters, labels clusters by
-                marker-panel module scores and defines candidate DPSCs
-                (definitions A-D).
+#               mitochondrial < 20%), removes doublets (scDblFinder),
+#               integrates samples (Harmony), clusters, labels clusters by
+#               marker-panel module scores and defines candidate DPSCs
+#               (definitions A-D).
 # Inputs:       data/raw/<GEO>/; data/metadata/<GEO>_samples.tsv;
-                config/validation_datasets.yaml; optional
-                data/annotation/<GEO>_cluster_labels.csv.
+#               config/validation_datasets.yaml; optional
+#               data/annotation/<GEO>_cluster_labels.csv.
 # Outputs:      data/processed/<GEO>_preprocessed.rds;
-                results/<GEO>/qc_summary.csv, cluster_labels_auto.csv,
-                mesenchyme_subcluster_scores.csv, umap_cell_types.png.
+#               results/<GEO>/qc_summary.csv, cluster_labels_auto.csv,
+#               mesenchyme_subcluster_scores.csv, umap_cell_types.png.
 # Usage:        Rscript scripts/02_preprocess.R <GEO accession>
 # Dependencies: R 4.6; Seurat 5, harmony, scDblFinder, edgeR, GEOquery, ggplot2,
 #               patchwork, dplyr (exact versions in renv.lock)
@@ -38,35 +38,47 @@ set.seed(2026)
 acc <- commandArgs(trailingOnly = TRUE)[1]
 cfg <- load_config()
 if (is.na(acc) || !acc %in% names(cfg$datasets)) stop("Give one of: ", paste(names(cfg$datasets), collapse = ", "))
-ds  <- cfg$datasets[[acc]]
-ss  <- read_sample_sheet(ds$sample_sheet)
-out <- file.path("results", acc); dir.create(out, recursive = TRUE, showWarnings = FALSE)
+ds <- cfg$datasets[[acc]]
+ss <- read_sample_sheet(ds$sample_sheet)
+out <- file.path("results", acc)
+dir.create(out, recursive = TRUE, showWarnings = FALSE)
 dir.create("data/processed", showWarnings = FALSE)
 
 # ---- Load ----------------------------------------------------------------------
 if (isTRUE(ds$combined_matrix)) {
   # One count matrix for all samples (GSE227731): split cells by cell_regex
   f <- list.files(file.path("data/raw", acc), "count_matrix.*\\.(csv|tsv|txt)(\\.gz)?$",
-                  recursive = TRUE, full.names = TRUE)[1]
+    recursive = TRUE, full.names = TRUE
+  )[1]
   df <- data.table::fread(f, data.table = FALSE)
-  genes <- df[[1]]; df <- df[, -1, drop = FALSE]
-  m_all <- as(as.matrix(df), "dgCMatrix"); rownames(m_all) <- make.unique(as.character(genes))
-  if (mean(grepl("[ACGT]{10,}", head(genes, 200))) > 0.5) m_all <- t(m_all)   # cells were rows
+  genes <- df[[1]]
+  df <- df[, -1, drop = FALSE]
+  m_all <- as(as.matrix(df), "dgCMatrix")
+  rownames(m_all) <- make.unique(as.character(genes))
+  if (mean(grepl("[ACGT]{10,}", head(genes, 200))) > 0.5) m_all <- t(m_all) # cells were rows
   message(nrow(m_all), " genes x ", ncol(m_all), " cells")
   message("Example cell names: ", paste(head(colnames(m_all), 5), collapse = ", "))
   hits <- sapply(ss$cell_regex, function(r) grepl(r, colnames(m_all)))
-  if (any(colSums(hits) == 0) || any(rowSums(hits) > 1))
-    stop("cell_regex does not split the cells cleanly. Check the example cell names ",
-         "above and edit cell_regex in ", ds$sample_sheet)
+  if (any(colSums(hits) == 0) || any(rowSums(hits) > 1)) {
+    stop(
+      "cell_regex does not split the cells cleanly. Check the example cell names ",
+      "above and edit cell_regex in ", ds$sample_sheet
+    )
+  }
   objs <- lapply(seq_len(nrow(ss)), function(i) {
     o <- CreateSeuratObject(m_all[, hits[, i]], project = ss$sample_id[i], min.cells = 3)
-    o$sample <- ss$sample_id[i]; o$donor <- ss$donor[i]; o$condition <- ss$condition[i]; o
+    o$sample <- ss$sample_id[i]
+    o$donor <- ss$donor[i]
+    o$condition <- ss$condition[i]
+    o
   })
 } else {
   objs <- lapply(seq_len(nrow(ss)), function(i) {
     m <- read_counts_any(file.path("data/raw", acc), ss$accession[i])
     o <- CreateSeuratObject(m, project = ss$sample_id[i], min.cells = 3)
-    o$sample <- ss$sample_id[i]; o$donor <- ss$donor[i]; o$condition <- ss$condition[i]
+    o$sample <- ss$sample_id[i]
+    o$donor <- ss$donor[i]
+    o$condition <- ss$condition[i]
     o
   })
 }
@@ -75,10 +87,13 @@ obj <- JoinLayers(obj)
 n0 <- ncol(obj)
 
 # ---- QC and doublets -----------------------------------------------------------
-obj <- qc_filter(obj, cfg); n1 <- ncol(obj)
-obj <- remove_doublets(obj); n2 <- ncol(obj)
+obj <- qc_filter(obj, cfg)
+n1 <- ncol(obj)
+obj <- remove_doublets(obj)
+n2 <- ncol(obj)
 qc_tab <- data.frame(dataset = acc, cells_raw = n0, cells_after_QC = n1, singlets = n2)
-write.csv(qc_tab, file.path(out, "qc_summary.csv"), row.names = FALSE); print(qc_tab)
+write.csv(qc_tab, file.path(out, "qc_summary.csv"), row.names = FALSE)
+print(qc_tab)
 write.csv(as.data.frame(table(sample = obj$sample)), file.path(out, "cells_per_sample.csv"), row.names = FALSE)
 
 # ---- Clustering ----------------------------------------------------------------

@@ -7,12 +7,12 @@
 # Last updated: 2026-11-04
 # ------------------------------------------------------------------------------
 # Purpose:      Measures WLS (% expressing cells, mean expression) by cell type
-                and tests DPSCs against other cells: edgeR pseudobulk with >= 3
-                donors, descriptive Wilcoxon otherwise.
+#               and tests DPSCs against other cells: edgeR pseudobulk with >= 3
+#               donors, descriptive Wilcoxon otherwise.
 # Inputs:       data/processed/<GEO>_preprocessed.rds;
-                config/validation_datasets.yaml.
+#               config/validation_datasets.yaml.
 # Outputs:      results/<GEO>/WLS_tests.csv, WLS_by_cell_type.csv,
-                WLS_umap.png, WLS_dotplot.png.
+#               WLS_umap.png, WLS_dotplot.png.
 # Usage:        Rscript scripts/03_WLS_analysis.R <GEO accession>
 # Dependencies: R 4.6; Seurat 5, harmony, scDblFinder, edgeR, GEOquery, ggplot2,
 #               patchwork, dplyr (exact versions in renv.lock)
@@ -29,7 +29,8 @@ source("R/wls_validation_functions.R")
 set.seed(2026)
 
 acc <- commandArgs(trailingOnly = TRUE)[1]
-cfg <- load_config(); ds <- cfg$datasets[[acc]]
+cfg <- load_config()
+ds <- cfg$datasets[[acc]]
 out <- file.path("results", acc)
 obj <- readRDS(file.path("data/processed", paste0(acc, "_preprocessed.rds")))
 gene <- target_symbol(obj, cfg)
@@ -50,8 +51,10 @@ if (ds$design == "tissue") {
 
   is_mes <- obj$cell_type %in% MESENCHYME
   tests <- list()
-  for (d in c("A_stem_subclusters", "B_top20pct_stem_score",
-              "C_3plus_stem_markers", "D_MCAM_positive")) {
+  for (d in c(
+    "A_stem_subclusters", "B_top20pct_stem_score",
+    "C_3plus_stem_markers", "D_MCAM_positive"
+  )) {
     dp <- obj[[d]][, 1]
     tests[[paste(d, "all")]] <- cbind(definition = d, wls_test(obj, gene, dp, !dp, "DPSC vs all other cells"))
     tests[[paste(d, "mes")]] <- cbind(definition = d, wls_test(obj, gene, dp, is_mes & !dp, "DPSC vs other mesenchyme"))
@@ -60,16 +63,21 @@ if (ds$design == "tissue") {
   dpA <- obj$A_stem_subclusters
   for (ct in unique(obj$cell_type)) {
     ref <- obj$cell_type == ct & !dpA
-    if (sum(ref) >= 20)
-      tests[[ct]] <- cbind(definition = "A_stem_subclusters",
-                           wls_test(obj, gene, dpA, ref, paste("DPSC vs", ct)))
+    if (sum(ref) >= 20) {
+      tests[[ct]] <- cbind(
+        definition = "A_stem_subclusters",
+        wls_test(obj, gene, dpA, ref, paste("DPSC vs", ct))
+      )
+    }
   }
   plot_group <- "group"
 } else {
   # Stem-cell design: DPSC vs PDLSC, plus WLS per DPSC sub-cluster
   is_dpsc <- obj$cell_type == "DPSC"
-  tests <- list(cbind(definition = "sample label",
-                      wls_test(obj, gene, is_dpsc, !is_dpsc, "DPSC vs PDLSC")))
+  tests <- list(cbind(
+    definition = "sample label",
+    wls_test(obj, gene, is_dpsc, !is_dpsc, "DPSC vs PDLSC")
+  ))
   dp <- subset(obj, cell_type == "DPSC")
   dp$group <- paste0("DPSC_sub", dp$seurat_clusters)
   write.csv(wls_summary(dp, gene, "group"), file.path(out, "WLS_by_DPSC_subcluster.csv"), row.names = FALSE)
@@ -78,7 +86,8 @@ if (ds$design == "tissue") {
   plot_group <- "group"
 }
 
-tests <- do.call(rbind, tests); rownames(tests) <- NULL
+tests <- do.call(rbind, tests)
+rownames(tests) <- NULL
 tests$dataset <- acc
 write.csv(tests, file.path(out, "WLS_tests.csv"), row.names = FALSE)
 print(tests)
@@ -86,7 +95,7 @@ print(tests)
 # ---- Figures: one UMAP + one dot plot -------------------------------------------
 p1 <- FeaturePlot(obj, gene, order = TRUE) + ggtitle(paste0(gene, " (Gpr177) - ", acc))
 p2 <- DotPlot(obj, features = gene, group.by = plot_group) + coord_flip() +
-      theme(axis.text.x = element_text(angle = 45, hjust = 1)) + ggtitle(acc)
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + ggtitle(acc)
 ggsave(file.path(out, "WLS_umap.png"), p1, width = 6, height = 5, dpi = 300)
 ggsave(file.path(out, "WLS_dotplot.png"), p2, width = 7, height = 3.5, dpi = 300)
 message("Results in ", out)

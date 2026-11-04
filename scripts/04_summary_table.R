@@ -7,7 +7,7 @@
 # Last updated: 2026-11-04
 # ------------------------------------------------------------------------------
 # Purpose:      Collects the main DPSC test from each dataset into one table,
-                with GSE164157 as the reference row.
+#               with GSE164157 as the reference row.
 # Inputs:       results/<GEO>/WLS_tests.csv; config/validation_datasets.yaml.
 # Outputs:      results/WLS_cross_dataset_summary.csv.
 # Usage:        Rscript scripts/04_summary_table.R
@@ -29,23 +29,31 @@ ref <- cfg$reference
 rows <- list(data.frame(
   dataset = ref$dataset, design = ref$design, comparison = "DPSC vs all other cells",
   n_DPSC = 2847, pct_WLS_DPSC = ref$pct_WLS_DPSC, pct_WLS_ref = NA,
-  log2FC = ref$log2FC_vs_all_other, p_value = ref$p_value, test = ref$test))
+  log2FC = ref$log2FC_vs_all_other, p_value = ref$p_value, test = ref$test
+))
 
 for (acc in names(cfg$datasets)) {
   f <- file.path("results", acc, "WLS_tests.csv")
-  if (!file.exists(f)) { message("Not run yet: ", acc); next }
+  if (!file.exists(f)) {
+    message("Not run yet: ", acc)
+    next
+  }
   t <- read.csv(f)
   main <- t[t$comparison %in% c("DPSC vs all other cells", "DPSC vs PDLSC") &
-            t$definition %in% c("A_stem_subclusters", "sample label"), ]
-  rows[[acc]] <- data.frame(dataset = acc, design = cfg$datasets[[acc]]$design,
+    t$definition %in% c("A_stem_subclusters", "sample label"), ]
+  rows[[acc]] <- data.frame(
+    dataset = acc, design = cfg$datasets[[acc]]$design,
     comparison = main$comparison, n_DPSC = main$n_DPSC,
     pct_WLS_DPSC = round(main$pct_WLS_DPSC, 1), pct_WLS_ref = round(main$pct_WLS_ref, 1),
-    log2FC = round(main$log2FC, 2), p_value = signif(main$p_value, 2), test = main$test)
+    log2FC = round(main$log2FC, 2), p_value = signif(main$p_value, 2), test = main$test
+  )
 }
-tab <- do.call(rbind, rows); rownames(tab) <- NULL
+tab <- do.call(rbind, rows)
+rownames(tab) <- NULL
 tab$WLS_expressed_in_DPSC <- ifelse(tab$pct_WLS_DPSC >= 5, "yes", "low")
-tab$WLS_enriched_in_DPSC  <- ifelse(tab$log2FC > 0.5 & tab$p_value < 0.05, "yes",
-                             ifelse(tab$log2FC < -0.5 & tab$p_value < 0.05, "depleted", "no"))
+tab$WLS_enriched_in_DPSC <- ifelse(tab$log2FC > 0.5 & tab$p_value < 0.05, "yes",
+  ifelse(tab$log2FC < -0.5 & tab$p_value < 0.05, "depleted", "no")
+)
 tab$WLS_enriched_in_DPSC[grepl("descriptive", tab$test) & tab$WLS_enriched_in_DPSC != "no"] <-
   paste(tab$WLS_enriched_in_DPSC[grepl("descriptive", tab$test) & tab$WLS_enriched_in_DPSC != "no"], "(1 donor)")
 
