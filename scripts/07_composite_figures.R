@@ -1,15 +1,36 @@
-# =============================================================================
-# 07_composite_figures.R
+# ==============================================================================
+# Title:        07_composite_figures.R - Composite figures in Prof. Hsu's layout
+# Project:      Gpr177/Wntless (WLS) and Wnt/Hedgehog genes in human DPSCs
+# Author:       Md Tariqul Islam
+# Affiliation:  Laboratory of Professor Wei Hsu, The ADA Forsyth Institute,
+#               Somerville, MA, USA
+# Last updated: 2026-11-04
+# ------------------------------------------------------------------------------
+# Purpose:      For GSE164157 and GSE202476: labelled UMAP, gene UMAP and
+                violin by Yoshida group with AXIN2+ pulp cells boxed; also
+                saves every panel separately.
+# Inputs:       data/processed/GSE202476_preprocessed.rds; annotated GSE164157
+                object.
+# Outputs:      results/figures_composite/ (composites, individual/ panels,
+                composite_pct_expressing_by_Yoshida_group_*.csv).
+# Usage:        Rscript scripts/07_composite_figures.R <GSE164157 rds>
+                "GENE[:layout],..."
+# Dependencies: R 4.6; Seurat 5, harmony, scDblFinder, edgeR, GEOquery, ggplot2,
+#               patchwork, dplyr (exact versions in renv.lock)
+# Development:  Written with AI assistance (Claude, Anthropic); reviewed, run and
+#               validated by the author.
+# ------------------------------------------------------------------------------
+# Details:
 # Composite figure in the layout Prof. Hsu assembled for GPR177/WLS (Nov 2026):
 #   one row per dataset (GSE164157, GSE202476):
 #   [labelled cell-type UMAP] [gene UMAP] [gene violin by Yoshida groups, AXIN2+ pulp boxed]
 #   panel tags: A / B = UMAP pairs, C / D = violins
 # Same objects, UMAPs, labels and AXIN2+ pulp (Yoshida DPSC) definition as 05_figures_for_Hsu.R.
-#
 # Usage (from the repository root):
 #   Rscript scripts/07_composite_figures.R ~/dpsc-wls-human-scRNAseq/data/processed/GSE164157_annotated.rds
 #   optional 2nd argument: genes, e.g. "PTCH2,SMO" (default "PTCH1,PTCH2,SMO,WLS")
-# =============================================================================
+# ==============================================================================
+
 source("R/wls_validation_functions.R")
 suppressPackageStartupMessages({ library(patchwork); library(ggrepel) })
 set.seed(2026)

@@ -1,9 +1,30 @@
-# =============================================================================
+# ==============================================================================
+# Title:        03_WLS_analysis.R - WLS expression and enrichment in candidate DPSCs
+# Project:      Gpr177/Wntless (WLS) and Wnt/Hedgehog genes in human DPSCs
+# Author:       Md Tariqul Islam
+# Affiliation:  Laboratory of Professor Wei Hsu, The ADA Forsyth Institute,
+#               Somerville, MA, USA
+# Last updated: 2026-11-04
+# ------------------------------------------------------------------------------
+# Purpose:      Measures WLS (% expressing cells, mean expression) by cell type
+                and tests DPSCs against other cells: edgeR pseudobulk with >= 3
+                donors, descriptive Wilcoxon otherwise.
+# Inputs:       data/processed/<GEO>_preprocessed.rds;
+                config/validation_datasets.yaml.
+# Outputs:      results/<GEO>/WLS_tests.csv, WLS_by_cell_type.csv,
+                WLS_umap.png, WLS_dotplot.png.
+# Usage:        Rscript scripts/03_WLS_analysis.R <GEO accession>
+# Dependencies: R 4.6; Seurat 5, harmony, scDblFinder, edgeR, GEOquery, ggplot2,
+#               patchwork, dplyr (exact versions in renv.lock)
+# Development:  Written with AI assistance (Claude, Anthropic); reviewed, run and
+#               validated by the author.
+# ------------------------------------------------------------------------------
+# Details:
 # Authotr: Md Tariqul Islam | Northeastern University | Prof. Hsu Lab | ADA Forsyth Inst.
-# 03_WLS_analysis.R
 # The single question: is WLS (Gpr177/Wntless) expressed in, and enriched in, DPSCs?
 # Usage:  Rscript scripts/03_WLS_analysis.R GSE185222
-# =============================================================================
+# ==============================================================================
+
 source("R/wls_validation_functions.R")
 set.seed(2026)
 

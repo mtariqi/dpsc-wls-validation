@@ -1,9 +1,27 @@
-# =============================================================================
+# ==============================================================================
+# Title:        04_summary_table.R - Cross-dataset summary table
+# Project:      Gpr177/Wntless (WLS) and Wnt/Hedgehog genes in human DPSCs
+# Author:       Md Tariqul Islam
+# Affiliation:  Laboratory of Professor Wei Hsu, The ADA Forsyth Institute,
+#               Somerville, MA, USA
+# Last updated: 2026-11-04
+# ------------------------------------------------------------------------------
+# Purpose:      Collects the main DPSC test from each dataset into one table,
+                with GSE164157 as the reference row.
+# Inputs:       results/<GEO>/WLS_tests.csv; config/validation_datasets.yaml.
+# Outputs:      results/WLS_cross_dataset_summary.csv.
+# Usage:        Rscript scripts/04_summary_table.R
+# Dependencies: R 4.6; Seurat 5, harmony, scDblFinder, edgeR, GEOquery, ggplot2,
+#               patchwork, dplyr (exact versions in renv.lock)
+# Development:  Written with AI assistance (Claude, Anthropic); reviewed, run and
+#               validated by the author.
+# ------------------------------------------------------------------------------
+# Details:
 # Authotr: Md Tariqul Islam | Northeastern University | Prof. Hsu Lab | ADA Forsyth Inst.
-# 04_summary_table.R
 # Final deliverable: one row per dataset answering the single question.
 # Usage: Rscript scripts/04_summary_table.R
-# =============================================================================
+# ==============================================================================
+
 source("R/wls_validation_functions.R")
 cfg <- load_config()
 ref <- cfg$reference

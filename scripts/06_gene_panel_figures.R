@@ -1,14 +1,35 @@
-# =============================================================================
-# 06_gene_panel_figures.R
+# ==============================================================================
+# Title:        06_gene_panel_figures.R - UMAP and violin plots for any gene list
+# Project:      Gpr177/Wntless (WLS) and Wnt/Hedgehog genes in human DPSCs
+# Author:       Md Tariqul Islam
+# Affiliation:  Laboratory of Professor Wei Hsu, The ADA Forsyth Institute,
+#               Somerville, MA, USA
+# Last updated: 2026-11-04
+# ------------------------------------------------------------------------------
+# Purpose:      Makes one UMAP and one violin plot per gene and dataset with
+                the same UMAPs and cell-type groups as the WLS figures (used
+                for GLI1, PTCH1, HHIP, AXIN2, PTCH2, SMO).
+# Inputs:       data/processed/<GEO>_preprocessed.rds; annotated GSE164157
+                object.
+# Outputs:      results/figures_gene_panel/<GENE>/ (PNG, PDF);
+                gene_panel_pct_expressing_*.csv.
+# Usage:        Rscript scripts/06_gene_panel_figures.R <GSE164157 rds> [GENES]
+                [DATASETS]
+# Dependencies: R 4.6; Seurat 5, harmony, scDblFinder, edgeR, GEOquery, ggplot2,
+#               patchwork, dplyr (exact versions in renv.lock)
+# Development:  Written with AI assistance (Claude, Anthropic); reviewed, run and
+#               validated by the author.
+# ------------------------------------------------------------------------------
+# Details:
 # Prof. Hsu, 2 Nov 2026: "the same analysis as Gpr177/Wls" for more genes:
 # 4 UMAP plots and 4 violin plots per gene (one per dataset), nothing else.
 # Genes: GLI1, PTCH1, HHIP (priority) and AXIN2 (validation).
 # Groups and UMAPs are identical to 05_figures_for_Hsu.R, so the plots match the WLS figures.
-#
 # Usage (from the repository root):
 #   Rscript scripts/06_gene_panel_figures.R ~/dpsc-wls-human-scRNAseq/data/processed/GSE164157_annotated.rds
 # Optional: a comma-separated gene list as the 2nd argument, e.g. "GLI1,PTCH1,HHIP,AXIN2"
-# =============================================================================
+# ==============================================================================
+
 source("R/wls_validation_functions.R")
 suppressPackageStartupMessages(library(patchwork))
 set.seed(2026)

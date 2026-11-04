@@ -1,10 +1,28 @@
-# =============================================================================
-# R/wls_validation_functions.R
+# ==============================================================================
+# Title:        wls_validation_functions.R - Shared functions for the validation pipeline
+# Project:      Gpr177/Wntless (WLS) and Wnt/Hedgehog genes in human DPSCs
+# Author:       Md Tariqul Islam
+# Affiliation:  Laboratory of Professor Wei Hsu, The ADA Forsyth Institute,
+#               Somerville, MA, USA
+# Last updated: 2026-11-04
+# ------------------------------------------------------------------------------
+# Purpose:      Marker panels, data loading, QC, doublet removal, clustering,
+                cluster annotation, DPSC definitions (A-D) and WLS test
+                functions shared by scripts 02-05.
+# Inputs:       Sourced by other scripts.
+# Outputs:      None (function definitions).
+# Usage:        source("R/wls_validation_functions.R")
+# Dependencies: R 4.6; Seurat 5, harmony, scDblFinder, edgeR, GEOquery, ggplot2,
+#               patchwork, dplyr (exact versions in renv.lock)
+# Development:  Written with AI assistance (Claude, Anthropic); reviewed, run and
+#               validated by the author.
+# ------------------------------------------------------------------------------
+# Details:
 # Shared helpers for the cross-dataset WLS validation.
 # Marker panels and DPSC definitions are copied from 06_annotation.R and
 # 07b_WLS_sensitivity.R in mtariqi/dpsc-wls-human-scRNAseq, so every dataset
 # is analysed the same way as the discovery dataset GSE164157.
-# =============================================================================
+# ==============================================================================
 
 suppressPackageStartupMessages({
   library(Seurat); library(Matrix); library(yaml); library(dplyr)

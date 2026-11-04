@@ -1,5 +1,28 @@
-# =============================================================================
-# 05_figures_for_Hsu.R
+# ==============================================================================
+# Title:        05_figures_for_Hsu.R - Cell-type and WLS figures; Yoshida et al. 2025 DPSC definition
+# Project:      Gpr177/Wntless (WLS) and Wnt/Hedgehog genes in human DPSCs
+# Author:       Md Tariqul Islam
+# Affiliation:  Laboratory of Professor Wei Hsu, The ADA Forsyth Institute,
+#               Somerville, MA, USA
+# Last updated: 2026-11-04
+# ------------------------------------------------------------------------------
+# Purpose:      Makes labelled UMAPs, marker dot plots, WLS UMAPs and violins
+                for all datasets; applies the Yoshida et al. (2025) marker
+                panels and AXIN2+ pulp-cell DPSC definition; tests WLS in
+                AXIN2+ vs AXIN2- pulp cells with depth-adjusted logistic
+                regression.
+# Inputs:       data/processed/<GEO>_preprocessed.rds; annotated GSE164157
+                object from the discovery repository.
+# Outputs:      results/figures_for_Hsu/ (PNG, PDF,
+                *_WLS_by_Yoshida_groups.csv, *_Yoshida_depth_check.csv).
+# Usage:        Rscript scripts/05_figures_for_Hsu.R <path to
+                GSE164157_annotated.rds>
+# Dependencies: R 4.6; Seurat 5, harmony, scDblFinder, edgeR, GEOquery, ggplot2,
+#               patchwork, dplyr (exact versions in renv.lock)
+# Development:  Written with AI assistance (Claude, Anthropic); reviewed, run and
+#               validated by the author.
+# ------------------------------------------------------------------------------
+# Details:
 # Figures requested by Prof. Hsu (email, 14 Oct 2026), for every dataset:
 #   1. UMAP with each cluster labelled by cell type (candidate DPSCs labelled)
 #   2. Marker dot plot that justifies each label (WLS added as the last column)
@@ -9,7 +32,8 @@
 # Usage (from the repository root):
 #   Rscript scripts/05_figures_for_Hsu.R ~/dpsc-wls-human-scRNAseq/data/processed/<GSE164157 annotated>.rds
 # The argument is the annotated GSE164157 Seurat object from the discovery repo.
-# =============================================================================
+# ==============================================================================
+
 source("R/wls_validation_functions.R")
 suppressPackageStartupMessages(library(patchwork))
 set.seed(2026)

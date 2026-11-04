@@ -1,12 +1,37 @@
-# =============================================================================
+# ==============================================================================
+# Title:        02_preprocess.R - Quality control, doublets, clustering, annotation and DPSC definitions
+# Project:      Gpr177/Wntless (WLS) and Wnt/Hedgehog genes in human DPSCs
+# Author:       Md Tariqul Islam
+# Affiliation:  Laboratory of Professor Wei Hsu, The ADA Forsyth Institute,
+#               Somerville, MA, USA
+# Last updated: 2026-11-04
+# ------------------------------------------------------------------------------
+# Purpose:      Loads one dataset, filters cells (genes > 200, UMIs > 500,
+                mitochondrial < 20%), removes doublets (scDblFinder),
+                integrates samples (Harmony), clusters, labels clusters by
+                marker-panel module scores and defines candidate DPSCs
+                (definitions A-D).
+# Inputs:       data/raw/<GEO>/; data/metadata/<GEO>_samples.tsv;
+                config/validation_datasets.yaml; optional
+                data/annotation/<GEO>_cluster_labels.csv.
+# Outputs:      data/processed/<GEO>_preprocessed.rds;
+                results/<GEO>/qc_summary.csv, cluster_labels_auto.csv,
+                mesenchyme_subcluster_scores.csv, umap_cell_types.png.
+# Usage:        Rscript scripts/02_preprocess.R <GEO accession>
+# Dependencies: R 4.6; Seurat 5, harmony, scDblFinder, edgeR, GEOquery, ggplot2,
+#               patchwork, dplyr (exact versions in renv.lock)
+# Development:  Written with AI assistance (Claude, Anthropic); reviewed, run and
+#               validated by the author.
+# ------------------------------------------------------------------------------
+# Details:
 # Authotr: Md Tariqul Islam | Northeastern University | Prof. Hsu Lab | ADA Forsyth Inst.
-# 02_preprocess.R
 # Load -> QC -> doublets -> cluster -> annotate -> DPSC definitions A-D,
 # with the same settings as GSE164157 (scripts 04-07b in mtariqi/dpsc-wls-human-scRNAseq).
 # Usage:  Rscript scripts/02_preprocess.R GSE185222
 #         Rscript scripts/02_preprocess.R GSE202476
 #         Rscript scripts/02_preprocess.R GSE227731
-# =============================================================================
+# ==============================================================================
+
 source("R/wls_validation_functions.R")
 set.seed(2026)
 
