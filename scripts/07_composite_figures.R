@@ -4,37 +4,42 @@
 # Author:       Md Tariqul Islam
 # Affiliation:  Laboratory of Professor Wei Hsu, The ADA Forsyth Institute,
 #               Somerville, MA, USA
-# Last updated: 2026-11-04
+# Last updated: 2026-11-05
 # ------------------------------------------------------------------------------
-# Purpose:      For GSE164157 and GSE202476: labelled UMAP, gene UMAP and
-#               violin by Yoshida group with AXIN2+ pulp cells boxed; also
-#               saves every panel separately.
+# Purpose:      For GSE164157 and GSE202476: cell-group UMAP (legend only, no
+#               labels inside the plot), gene UMAP and violin by the same groups
+#               (Axin2+ pulp, Axin2- pulp, other cell types); also saves every
+#               panel separately.
 # Inputs:       data/processed/GSE202476_preprocessed.rds; annotated GSE164157
 #               object.
 # Outputs:      results/figures_composite/ (composites, individual/ panels,
 #               composite_pct_expressing_by_Yoshida_group_*.csv).
 # Usage:        Rscript scripts/07_composite_figures.R <GSE164157 rds>
 #               "GENE[:layout],..."
-# Dependencies: R 4.6; Seurat 5, harmony, scDblFinder, edgeR, GEOquery, ggplot2,
-#               patchwork, dplyr (exact versions in renv.lock)
+# Dependencies: R 4.6; Seurat 5, ggplot2, patchwork, dplyr
+#               (exact versions in renv.lock)
 # Development:  Written with AI assistance (Claude, Anthropic); reviewed, run and
 #               validated by the author.
 # ------------------------------------------------------------------------------
 # Details:
 # Composite figure in the layout Prof. Hsu assembled for GPR177/WLS (Nov 2026):
 #   one row per dataset (GSE164157, GSE202476):
-#   [labelled cell-type UMAP] [gene UMAP] [gene violin by Yoshida groups, AXIN2+ pulp boxed]
+#   [cell-group UMAP] [gene UMAP] [gene violin by the same groups]
 #   panel tags: A / B = UMAP pairs, C / D = violins
-# Same objects, UMAPs, labels and AXIN2+ pulp (Yoshida DPSC) definition as 05_figures_for_Hsu.R.
+# Changes on 2026-11-05 (requested by Prof. Hsu):
+#   - no blue box in the violin plots
+#   - cell-group UMAP has no labels inside the plot; groups are named in the legend only
+#   - UMAP and violins use the same groups: Axin2+ pulp, Axin2- pulp, then other cell types
+#   - each cell-group UMAP is also saved on its own (individual/<GEO>_cell_groups_UMAP)
+# Same objects, UMAPs and Axin2+ pulp (Yoshida DPSC) definition as 05_figures_for_Hsu.R.
 # Usage (from the repository root):
 #   Rscript scripts/07_composite_figures.R ~/dpsc-wls-human-scRNAseq/data/processed/GSE164157_annotated.rds
-#   optional 2nd argument: genes, e.g. "PTCH2,SMO" (default "PTCH1,PTCH2,SMO,WLS")
+#   2nd argument: genes with layouts, e.g. "PTCH1:violin,PTCH2:umap_violin,SMO:umap_violin"
 # ==============================================================================
 
 source("R/wls_validation_functions.R")
 suppressPackageStartupMessages({
   library(patchwork)
-  library(ggrepel)
 })
 set.seed(2026)
 
@@ -52,13 +57,15 @@ stopifnot(all(LAYOUT %in% c("full", "umap_violin", "violin")))
 message(paste(GENES, LAYOUT, sep = " -> ", collapse = "; "))
 out <- "results/figures_composite"
 dir.create(out, recursive = TRUE, showWarnings = FALSE)
-cfg <- load_config()
 
 ORDER <- c(
   "Pulp_fibroblast", "Candidate_DPSC", "Perivascular_MCAM", "Odontoblast", "Endothelial",
   "Schwann_glia", "T_NK", "Myeloid", "B_plasma"
 )
 PULP_TYPES <- c("Pulp_fibroblast", "MSC_progenitor", "Odontoblast")
+# group names used in both the UMAP legend and the violin plots
+AX_POS <- "Axin2+ pulp"
+AX_NEG <- "Axin2- pulp"
 
 umap_name <- function(obj) {
   r <- grep("umap", Reductions(obj), value = TRUE, ignore.case = TRUE)
@@ -76,43 +83,27 @@ prepare <- function(obj, dpsc_col) {
   ax <- if ("AXIN2" %in% rownames(obj)) FetchData(obj, "AXIN2")[, 1] > 0 else rep(FALSE, ncol(obj))
   pulp <- as.character(obj$cell_type) %in% PULP_TYPES
   yg <- as.character(obj$cell_type)
-  yg[pulp & ax] <- "AXIN2+ pulp"
-  yg[pulp & !ax] <- "AXIN2- pulp"
+  yg[pulp & ax] <- AX_POS
+  yg[pulp & !ax] <- AX_NEG
   obj$yosh_group <- factor(yg, levels = c(
-    "AXIN2+ pulp", "AXIN2- pulp",
-    sort(setdiff(unique(yg), c("AXIN2+ pulp", "AXIN2- pulp")))
+    AX_POS, AX_NEG,
+    sort(setdiff(unique(yg), c(AX_POS, AX_NEG)))
   ))
   obj
 }
 
-cluster_labels <- function(obj, red) {
-  clcol <- intersect(c("harmony_clusters", "seurat_clusters"), colnames(obj@meta.data))[1]
-  emb <- Embeddings(obj, red)[, 1:2]
-  df <- data.frame(
-    x = emb[, 1], y = emb[, 2], group = as.character(obj$plot_group),
-    cl = as.character(obj@meta.data[[clcol]])
-  )
-  min_n <- max(15, round(0.005 * nrow(df)))
-  df %>%
-    group_by(cl, group) %>%
-    summarise(n = n(), x = median(x), y = median(y), .groups = "drop") %>%
-    filter(n >= min_n) %>%
-    group_by(group) %>%
-    arrange(desc(n), .by_group = TRUE) %>%
-    filter(!duplicated(paste(round(x / 2), round(y / 2)))) %>%
-    ungroup()
-}
-
 row_panels <- function(obj, acc, g) {
   red <- umap_name(obj)
-  lab <- cluster_labels(obj, red)
-  p_annot <- DimPlot(obj, reduction = red, group.by = "plot_group", label = FALSE, raster = FALSE) +
-    geom_text_repel(
-      data = lab, aes(x = x, y = y, label = group), inherit.aes = FALSE, size = 2.6,
-      fontface = "bold", box.padding = 0.3, min.segment.length = 0, max.overlaps = Inf, seed = 2026
-    ) +
+  # one fixed colour per group, so each group has the same colour in the UMAP and the violin
+  pal <- setNames(scales::hue_pal()(nlevels(obj$yosh_group)), levels(obj$yosh_group))
+  # cell-group UMAP: same groups as the violins, names in the legend only;
+  # Axin2+ pulp cells are drawn on top so the few scattered cells stay visible
+  p_annot <- DimPlot(obj,
+    reduction = red, group.by = "yosh_group", label = FALSE, raster = FALSE,
+    order = AX_POS, cols = pal
+  ) +
     ggtitle(acc) + labs(x = "UMAP_1", y = "UMAP_2") +
-    theme(legend.text = element_text(size = 7), legend.key.size = unit(0.35, "cm"))
+    theme(legend.text = element_text(size = 8), legend.key.size = unit(0.4, "cm"))
   if (!g %in% rownames(obj)) {
     blank <- ggplot() +
       annotate("text", x = 0, y = 0, label = paste(g, "is not in the", acc, "count matrix")) +
@@ -129,18 +120,15 @@ row_panels <- function(obj, acc, g) {
   }
   min_cells <- if (ncol(obj) > 5000) 50 else 20
   keep <- names(which(table(obj$yosh_group) >= min_cells))
-  if (!"AXIN2+ pulp" %in% keep && sum(obj$yosh_group == "AXIN2+ pulp") >= 10) keep <- c("AXIN2+ pulp", keep)
+  if (!AX_POS %in% keep && sum(obj$yosh_group == AX_POS) >= 10) keep <- c(AX_POS, keep)
   ob <- subset(obj, yosh_group %in% keep)
   ob$yosh_group <- droplevels(ob$yosh_group)
-  p_vln <- VlnPlot(ob, g, group.by = "yosh_group", pt.size = 0.05) + NoLegend() + labs(x = NULL) +
+  p_vln <- VlnPlot(ob, g,
+    group.by = "yosh_group", pt.size = 0.05,
+    cols = unname(pal[levels(ob$yosh_group)])
+  ) + NoLegend() + labs(x = NULL) +
     ggtitle(paste0(acc, ": ", g, " in Axin2+ DPSCs")) +
     theme(plot.title = element_text(size = 10), axis.text.x = element_text(size = 7))
-  if ("AXIN2+ pulp" %in% levels(ob$yosh_group)) {
-    p_vln <- p_vln + annotate("rect",
-      xmin = 0.5, xmax = 1.5, ymin = -Inf, ymax = Inf,
-      fill = NA, colour = "#4C7BE5", linewidth = 0.9
-    )
-  }
   list(p_annot, p_feat, p_vln)
 }
 
@@ -175,6 +163,12 @@ for (g in GENES) {
   ind <- file.path(out, "individual")
   dir.create(ind, showWarnings = FALSE)
   for (rr in list(list(r1, "GSE164157"), list(r2, "GSE202476"))) {
+    ggsave(file.path(ind, paste0(rr[[2]], "_cell_groups_UMAP.png")), rr[[1]][[1]],
+      width = 7, height = 5, dpi = 300, bg = "white"
+    )
+    ggsave(file.path(ind, paste0(rr[[2]], "_cell_groups_UMAP.pdf")), rr[[1]][[1]],
+      width = 7, height = 5, bg = "white"
+    )
     if (lay %in% c("full", "umap_violin")) {
       ggsave(file.path(ind, paste0(g, "_", rr[[2]], "_UMAP.png")), rr[[1]][[2]], width = 6, height = 5, dpi = 300, bg = "white")
       ggsave(file.path(ind, paste0(g, "_", rr[[2]], "_UMAP.pdf")), rr[[1]][[2]], width = 6, height = 5, bg = "white")
@@ -203,4 +197,4 @@ tab <- do.call(rbind, tab)
 write.csv(tab, file.path(out, paste0("composite_pct_expressing_by_Yoshida_group_", paste(GENES, collapse = "_"), ".csv")),
   row.names = FALSE
 )
-print(tab %>% filter(group %in% c("AXIN2+ pulp", "AXIN2- pulp")), n = 50)
+print(tab %>% filter(group %in% c(AX_POS, AX_NEG)), n = 50)
