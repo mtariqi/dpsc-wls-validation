@@ -209,6 +209,43 @@ Raw downloads and `.rds` objects are not tracked; running the scripts in order r
 
 The analysis answers expression questions only; DEG, GSEA and pathway analyses are out of scope. Three datasets have one donor or library per group, Axin2⁺ cells are few, DPSCs are defined computationally, mouse-derived markers are applied to human pulp, and all data are RNA only.
 
-## Citation and licence
+## 👥 Team
 
-Cite via [`CITATION.cff`](CITATION.cff). Code is released under the MIT licence. Analysis code was developed with AI assistance (Claude, Anthropic) and reviewed, run and validated by the author.
+| Role | Name | Affiliation |
+|---|---|---|
+| Investigator | **Md Tariqul Islam** | The ADA Forsyth Institute |
+| Supervisor | **Professor Wei Hsu** | The ADA Forsyth Institute |
+
+## 🙏 Acknowledgments
+
+Thanks to the authors of the original dental pulp single-cell studies for depositing their data publicly, and to the developers of Seurat, Harmony, scDblFinder, edgeR, lme4, Bioconductor, GEOquery, and renv.
+
+## 📖 Citation
+
+Use the **"Cite this repository"** button on the right (generated from [`CITATION.cff`](CITATION.cff)), or:
+
+```bibtex
+@software{islam2026wlsdpsc,
+  author  = {Islam, Md Tariqul},
+  title   = {dpsc-wls-human-scRNAseq: WLS (GPR177/Wntless) expression in candidate human dental pulp stem cells},
+  year    = {2026},
+  version = {1.0.0},
+  url     = {https://github.com/mtariqi/dpsc-wls-human-scRNAseq}
+}
+```
+
+Please also cite the original publication associated with [GSE164157](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE164157).
+
+## Citation and licence
+- **Cite** via [`CITATION.cff`](CITATION.cff).
+- **Code** (`scripts/` and other code): [MIT](LICENSE)
+- **Reports, figures and tables** (`docs/`, `results/`, `assets/`): [CC BY 4.0](LICENSE-docs.md)
+- **Data**: GSE164157 is not redistributed and remains subject to its original terms.
+
+---
+
+<div align="center">
+<sub>Last updated: October 2, 2026 · Built with 🧬 R, Seurat and a lot of single cells</sub>
+</div>
+
+
