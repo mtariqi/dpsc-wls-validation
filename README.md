@@ -3,6 +3,7 @@
 </p>
 
 <p align="center">
+  <a href="https://doi.org/10.5281/zenodo.24347366"><img src="https://img.shields.io/badge/DOI-10.5281%2Fzenodo.24347366-1682D4?logo=zenodo&logoColor=white" alt="DOI"></a>
   <a href="https://www.r-project.org/"><img alt="R" src="https://img.shields.io/badge/R-4.6-276DC3?style=flat-square&logo=r&logoColor=white"></a>
   <a href="https://satijalab.org/seurat/"><img alt="Seurat" src="https://img.shields.io/badge/Seurat-v5-6A1B3A?style=flat-square"></a>
   <img alt="scRNA-seq" src="https://img.shields.io/badge/scRNA--seq-10x%20Genomics-0E7C7B?style=flat-square">
