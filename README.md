@@ -213,7 +213,7 @@ The analysis answers expression questions only; DEG, GSEA and pathway analyses a
 
 | Role | Name | Affiliation |
 |---|---|---|
-| Investigator | **Md Tariqul Islam** | The ADA Forsyth Institute |
+| Investigator | **Md Tariqul Islam** | Northeastern University |
 | Supervisor | **Professor Wei Hsu** | The ADA Forsyth Institute |
 
 ## 🙏 Acknowledgments
