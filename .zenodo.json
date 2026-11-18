@@ -3,7 +3,7 @@
   "upload_type": "software",
   "description": "<p>R pipeline and result tables testing whether WLS (Gpr177/Wntless) is expressed in, and enriched in, candidate dental pulp stem cells (DPSCs). Datasets: GEO GSE164157 (discovery, 5 donors), GSE202476, GSE185222 and GSE227731 (PRJNA946721). Result: WLS is expressed in DPSCs in all four datasets but enriched in none.</p>",
   "creators": [
-    {"name": "Islam, Md Tariqul", "affiliation": "The ADA Forsyth Institute"}
+    {"name": "Islam, Md Tariqul", "affiliation": "Northeastern University"}
   ],
   "contributors": [
     {"name": "Hsu, Wei", "affiliation": "The ADA Forsyth Institute", "type": "Supervisor"}
