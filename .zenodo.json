@@ -1,1 +1,21 @@
-
+{
+  "title": "WLS (Gpr177/Wntless) expression and enrichment in DPSCs: cross-dataset validation",
+  "upload_type": "software",
+  "description": "R pipeline for cross-dataset validation of WLS (Gpr177/Wntless) expression and enrichment in dental pulp stem cells (DPSCs). WLS is expressed in DPSCs in all four datasets but enriched in none.",
+  "creators": [
+    {
+      "name": "Islam, Md Tariqul", "affiliation": "Northeastern University"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "DPSC",
+    "WLS",
+    "Wntless",
+    "stem cells",
+    "enrichment analysis",
+    "UMAP",
+    "validation",
+    "R"
+  ]
+}
